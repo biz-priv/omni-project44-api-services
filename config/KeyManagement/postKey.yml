@@ -1,0 +1,18 @@
+PostKey:
+  handler: src/KeyManagement/PostKey/index.handler
+  layers:
+    - { Ref: CommonLibsLambdaLayer }
+  environment:
+    TOKEN_VALIDATOR: ${ssm:/omni-dw/devint/tokenValidator/table}
+    USAGE_PLAN: ${ssm:/omni/devint/usage/plan/name}
+    DEFAULT_AWS: ${self:provider.region}       
+  package:
+    individually: true
+    include:
+        - 'src/KeyManagement/PostKey/**'
+        - 'src/shared/**'    
+  events:
+    - http:
+        path: keys
+        method: post
+        cors: true

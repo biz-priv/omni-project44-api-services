@@ -1,0 +1,11 @@
+{
+    "Activity": [],
+    "Page": {
+        "Number": 1
+    },
+    "_links": {
+        "self": {
+            "href": "cqa8nhinr1.execute-api.us-east-1.amazonaws.com/devint/activity/1234?page=1&size=10&startkey=0&endkey=0"
+        }
+    }
+}

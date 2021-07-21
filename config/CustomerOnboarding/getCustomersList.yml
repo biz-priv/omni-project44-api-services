@@ -1,0 +1,18 @@
+GetCustomersList:
+  handler: src/CustomerOnboarding/GetCustomersList/index.handler
+  layers:
+    - { Ref: CommonLibsLambdaLayer }  
+  environment:
+    ACCOUNT_INFO: ${ssm:/omni/devint/account/info/table/dev/name}
+    DEFAULT_AWS: ${self:provider.region} 
+  package:
+    individually: true
+    include:
+        - 'src/CustomerOnboarding/GetCustomersList/**'
+        - 'src/shared/**'
+  events:
+    - http:
+        path: customers
+        method: get
+        cors: true
+            

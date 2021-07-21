@@ -1,0 +1,51 @@
+{
+    "Customers": [
+        {
+            "CustomerID": "1234",
+            "BillToAcct": "15733",
+            "CustomerNo": "WX",
+            "DeclaredType": "LL",
+            "SourceSystem": "TR",
+            "Station": "TT",
+            "CustomerStatus": "Active",
+            "Created": "NA",
+            "Updated": "NA",
+            "Age": "NA"
+        },
+        {
+            "CustomerID": "12345",
+            "BillToAcct": "15733",
+            "CustomerNo": "WX",
+            "DeclaredType": "LL",
+            "SourceSystem": "TR",
+            "Station": "TT",
+            "CustomerStatus": "Active",
+            "Created": "NA",
+            "Updated": "NA",
+            "Age": "NA"
+        },
+        {
+            "CustomerID": "123456",
+            "BillToAcct": "15733",
+            "CustomerNo": "WX",
+            "DeclaredType": "LL",
+            "SourceSystem": "TR",
+            "Station": "TT",
+            "CustomerStatus": "Active",
+            "Created": "NA",
+            "Updated": "NA",
+            "Age": "NA"
+        }
+    ],
+    "Page": {
+        "Size": 3,
+        "TotalElement": 10,
+        "TotalPages": 3,
+        "Number": 1
+    },
+    "_links": {
+        "self": {
+            "href": "cqa8nhinr1.execute-api.us-east-1.amazonaws.com/devint/customers?status=true&page=1&size=3&startkey=0"
+        }
+    }
+}

@@ -1,0 +1,17 @@
+GetUserActivityList:
+  handler: src/UserActivity/GetUserActivityList/index.handler
+  layers:
+    - { Ref: CommonLibsLambdaLayer }
+  environment:
+    USER_ACTIVITY: ${ssm:/omni/devint/support/portal/useractivity/table/name}
+    DEFAULT_AWS: ${self:provider.region}    
+  package:
+    individually: true
+    include:
+        - 'src/UserActivity/GetUserActivityList/**'
+        - 'src/shared/**'    
+  events:
+    - http:
+        path: /activity/{id}
+        method: get
+        cors: true

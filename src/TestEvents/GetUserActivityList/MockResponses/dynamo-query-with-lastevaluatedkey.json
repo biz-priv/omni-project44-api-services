@@ -1,0 +1,22 @@
+{
+    "Items": [
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:24 pm",
+            "Activity": "test",
+            "Description": "testing"
+        },
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:28 pm",
+            "Activity": "test",
+            "Description": "testing"
+        }
+    ],
+    "Count": 2,
+    "ScannedCount": 2,
+    "LastEvaluatedKey": {
+        "UserId": "4213",
+        "Timestamp": "July 20th 2021, 5:20:28 pm"
+    }
+}

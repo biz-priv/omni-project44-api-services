@@ -1,0 +1,30 @@
+{
+    "Items": [
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:24 pm",
+            "Activity": "test",
+            "Description": "testing"
+        },
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:28 pm",
+            "Activity": "test",
+            "Description": "testing"
+        },
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:32 pm",
+            "Activity": "test",
+            "Description": "testing"
+        },
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:35 pm",
+            "Activity": "test",
+            "Description": "testing"
+        }
+    ],
+    "Count": 4,
+    "ScannedCount": 4
+}

@@ -1,0 +1,17 @@
+UpdateCustomer:
+  handler: src/CustomerOnboarding/UpdateCustomer/index.handler
+  layers:
+    - { Ref: CommonLibsLambdaLayer }
+  environment:
+    ACCOUNT_INFO: ${ssm:/omni/devint/account/info/table/dev/name}
+    DEFAULT_AWS: ${self:provider.region}     
+  package:
+    individually: true
+    include:
+        - 'src/CustomerOnboarding/UpdateCustomer/**'
+        - 'src/shared/**'      
+  events:
+    - http:
+        path: customers
+        method: put
+        cors: true

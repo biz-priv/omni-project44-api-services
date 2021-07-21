@@ -1,0 +1,91 @@
+service: omni-project44-api-services
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'devint'}
+  memorySize: 128 
+  timeout: 15 
+  deploymentBucket: ${ssm:/omni-dw/${self:provider.stage}/sls/deployment/bucket}
+  role: ${ssm:/omni-dw/${self:provider.stage}/lambda/role}
+  vpc:
+    securityGroupIds:
+      - ${ssm:/omni-dw/${self:provider.stage}/lambda/sgId}
+    subnetIds:
+      - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetA}
+      - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetB}
+  iam: 
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: '*'
+
+custom:
+  prune:
+    automatic: true
+    number: 3
+  jest: 
+    collectCoverage: true
+  
+package:
+  individually: true
+  excludeDevDependencies: false
+  exclude:
+    - 'node_modules/**'
+    - 'src/**'
+    - '*.*'
+    - 'config/**'
+    - '__tests__/**'
+    - 'coverage/**'
+    - 'Jenkinsfile'
+
+functions:
+
+    # - ${file(config/CustomerOnboarding/deleteCustomer.yml)}
+    # - ${file(config/CustomerOnboarding/getCustomersList.yml)} 
+    # - ${file(config/CustomerOnboarding/postCustomer.yml)}
+    # - ${file(config/CustomerOnboarding/updateCustomer.yml)}
+    # - ${file(config/CustomerOnboarding/customersSummary.yml)}    
+
+    # - ${file(config/KeyManagement/postKey.yml)}    
+    # - ${file(config/KeyManagement/updateKey.yml)}
+
+    # - ${file(config/Subscription/deleteSubscription.yml)}
+    # - ${file(config/Subscription/getSubscriptionsList.yml)}
+    # - ${file(config/Subscription/postSubscription.yml)}
+    # - ${file(config/Subscription/updateSubscription.yml)}
+
+    # - ${file(config/UserActivity/getUserActivityList.yml)}    
+    # - ${file(config/UserActivity/postUserActivity.yml)}
+
+    - ${file(config/RedshiftRecord/GetRedshiftRecord.yml)}
+
+
+
+plugins:
+  - serverless-jest-plugin
+  - serverless-offline
+  - serverless-prune-plugin
+
+layers:
+  commonLibs:
+    path: lib
+    compatibleRuntimes:
+      - nodejs14.x
+    package:      
+      include:
+        - node_modules/**

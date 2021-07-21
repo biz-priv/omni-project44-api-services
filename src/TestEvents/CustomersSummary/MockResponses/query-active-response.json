@@ -1,0 +1,42 @@
+{
+    "Items": [
+        {
+            "BillToAcct": "15733",
+            "SourceSystem": "WT",
+            "CustomerStatus": "Active",
+            "Station": "LAX",
+            "CustomerNo": "15733",
+            "DeclaredType": "LL",
+            "CustomerID": "10090532"
+        },
+        {
+            "BillToAcct": "15733",
+            "SourceSystem": "WT",
+            "CustomerStatus": "Active",
+            "Station": "LAX",
+            "CustomerNo": "15733",
+            "DeclaredType": "LL",
+            "CustomerID": "10090533"
+        },
+        {
+            "BillToAcct": "15733",
+            "SourceSystem": "WT",
+            "CustomerStatus": "Active",
+            "Station": "LAX",
+            "CustomerNo": "15733",
+            "DeclaredType": "LL",
+            "CustomerID": "10090530"
+        },
+        {
+            "BillToAcct": "15733",
+            "SourceSystem": "WT",
+            "CustomerStatus": "Active",
+            "Station": "LAX",
+            "CustomerNo": "15733",
+            "DeclaredType": "LL",
+            "CustomerID": "10090531"
+        }
+    ],
+    "Count": 4,
+    "ScannedCount": 4
+}

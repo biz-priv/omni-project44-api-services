@@ -1,0 +1,20 @@
+GetRedshiftRecord:
+  handler: src/RedshiftRecord/GetRedshiftRecord/index.handler
+  layers:
+    - { Ref: CommonLibsLambdaLayer }  
+  environment:
+    DB_PORT: ${ssm:/omni-dw/devint/db/port}
+    DB_HOST: ${ssm:/omni-dw/devint/db/host~true} 
+    DB_PASSWORD: ${ssm:/omni-dw/devint/db/password~true}      
+    DB_DATABASE: ${ssm:/omni-dw/devint/db/name}
+    DB_USER: ${ssm:/omni-dw/devint/db/user~true} 
+  package:
+    individually: true
+    include:
+        - 'src/RedshiftRecord/GetRedshiftRecord/**'
+        - 'src/shared/**'
+  events:
+    - http:
+        path: records
+        method: get
+        cors: true

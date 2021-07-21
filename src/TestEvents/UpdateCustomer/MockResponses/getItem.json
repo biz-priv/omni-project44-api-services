@@ -1,0 +1,11 @@
+{
+    "Item": {
+        "BillToAcct": "15733",
+        "SourceSystem": "WT",
+        "CustomerStatus": "Active",
+        "Station": "LAX",
+        "CustomerNo": "15733",
+        "DeclaredType": "LL",
+        "CustomerID": "123456"
+    }
+}

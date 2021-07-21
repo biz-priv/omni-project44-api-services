@@ -1,0 +1,16 @@
+{
+    "items": [
+        {
+            "id": "sdfkj1",
+            "value": "1234",
+            "name": "1234",
+            "customerId": "1234",
+            "description": "test",
+            "enabled": "true",
+            "createdDate": "2021-06-18T06:54:54.000Z",
+            "lastUpdatedDate": "2021-06-26T06:54:54.000Z",
+            "stageKeys": "test",
+            "tags": "tag"
+        }
+    ]
+}

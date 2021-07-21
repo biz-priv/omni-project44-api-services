@@ -1,0 +1,38 @@
+{
+    "Activity": [
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:24 pm",
+            "Activity": "test",
+            "Description": "testing"
+        },
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:28 pm",
+            "Activity": "test",
+            "Description": "testing"
+        },
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:32 pm",
+            "Activity": "test",
+            "Description": "testing"
+        },
+        {
+            "UserId": "4213",
+            "Timestamp": "July 20th 2021, 5:20:35 pm",
+            "Activity": "test",
+            "Description": "testing"
+        }
+    ],
+    "Page": {
+        "Size": 4,
+        "TotalElement": 4,
+        "Number": 1
+    },
+    "_links": {
+        "self": {
+            "href": "cqa8nhinr1.execute-api.us-east-1.amazonaws.com/devint/activity/1234?page=1&size=10&startkey=0&endkey=0"
+        }
+    }
+}
