@@ -16,7 +16,7 @@
         "lodash.get": "^4.4.2",
         "lodash.set": "^4.3.2",
         "moment": "^2.29.1",
-        "mysql": "^2.18.1",
+        "node-redshift": "^0.1.5",
         "serverless": "^1.83.3",
         "serverless-jest-plugin": "^0.3.0",
         "serverless-offline": "^4.10.6",
