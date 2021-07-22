@@ -14,7 +14,7 @@ provider:
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/sgId}
     subnetIds:
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetA}
-      - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetB}
+      # - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetB}
   iam: 
     role:
       statements:
@@ -77,7 +77,7 @@ functions:
 
 
 plugins:
-  - serverless-jest-plugin
+  # - serverless-jest-plugin
   - serverless-offline
   - serverless-prune-plugin
 

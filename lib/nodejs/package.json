@@ -17,8 +17,9 @@
         "lodash.set": "^4.3.2",
         "moment": "^2.29.1",
         "node-redshift": "^0.1.5",
+        "pg": "^8.6.0",
+        "pg-async": "^3.1.0",
         "serverless": "^1.83.3",
-        "serverless-jest-plugin": "^0.3.0",
         "serverless-offline": "^4.10.6",
         "serverless-prune-plugin": "^1.5.0",
         "uuidv4": "^6.2.10"

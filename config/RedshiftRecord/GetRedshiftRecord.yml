@@ -13,8 +13,10 @@ GetRedshiftRecord:
     include:
         - 'src/RedshiftRecord/GetRedshiftRecord/**'
         - 'src/shared/**'
-  events:
-    - http:
-        path: records
-        method: get
-        cors: true
+  # events:
+  #   - http:
+  #       path: records
+  #       method: get
+  #       cors: true
+  #   # - eventBridge:
+  #   #    schedule: cron(0/2 * * * ? *)
