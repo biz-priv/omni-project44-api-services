@@ -7,7 +7,9 @@ GetRedshiftRecord:
     DB_HOST: ${ssm:/omni-dw/devint/db/host~true} 
     DB_PASSWORD: ${ssm:/omni-dw/devint/db/password~true}      
     DB_DATABASE: ${ssm:/omni-dw/devint/db/name}
-    DB_USER: ${ssm:/omni-dw/devint/db/user~true} 
+    DB_USER: ${ssm:/omni-dw/devint/db/user~true}
+    PROJECT44_TABLE: ${ssm:/omni-dw/devint/project44/table} 
+    DEFAULT_AWS: ${self:provider.region}       
   package:
     individually: true
     include:

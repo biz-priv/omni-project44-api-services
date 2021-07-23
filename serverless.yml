@@ -49,35 +49,15 @@ package:
     - 'src/**'
     - '*.*'
     - 'config/**'
-    - '__tests__/**'
-    - 'coverage/**'
     - 'Jenkinsfile'
 
 functions:
-
-    # - ${file(config/CustomerOnboarding/deleteCustomer.yml)}
-    # - ${file(config/CustomerOnboarding/getCustomersList.yml)} 
-    # - ${file(config/CustomerOnboarding/postCustomer.yml)}
-    # - ${file(config/CustomerOnboarding/updateCustomer.yml)}
-    # - ${file(config/CustomerOnboarding/customersSummary.yml)}    
-
-    # - ${file(config/KeyManagement/postKey.yml)}    
-    # - ${file(config/KeyManagement/updateKey.yml)}
-
-    # - ${file(config/Subscription/deleteSubscription.yml)}
-    # - ${file(config/Subscription/getSubscriptionsList.yml)}
-    # - ${file(config/Subscription/postSubscription.yml)}
-    # - ${file(config/Subscription/updateSubscription.yml)}
-
-    # - ${file(config/UserActivity/getUserActivityList.yml)}    
-    # - ${file(config/UserActivity/postUserActivity.yml)}
 
     - ${file(config/RedshiftRecord/GetRedshiftRecord.yml)}
 
 
 
 plugins:
-  # - serverless-jest-plugin
   - serverless-offline
   - serverless-prune-plugin
 
