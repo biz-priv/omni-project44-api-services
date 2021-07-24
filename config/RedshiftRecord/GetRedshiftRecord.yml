@@ -8,7 +8,10 @@ GetRedshiftRecord:
     DB_PASSWORD: ${ssm:/omni-dw/devint/db/password~true}      
     DB_DATABASE: ${ssm:/omni-dw/devint/db/name}
     DB_USER: ${ssm:/omni-dw/devint/db/user~true}
-    PROJECT44_TABLE: ${ssm:/omni-dw/devint/project44/table} 
+    PROJECT44_TABLE: ${ssm:/omni-dw/devint/project44/table}
+    PROJECT44_ENDPOINT: ${ssm:/omni-project44-api-services/devint/url}
+    PROJECT44_USERNAME: ${ssm:/omni-project44-api-services/devint/auth/username}
+    PROJECT44_PASSWORD: ${ssm:/omni-project44-api-services/devint/auth/password} 
     DEFAULT_AWS: ${self:provider.region}       
   package:
     individually: true
