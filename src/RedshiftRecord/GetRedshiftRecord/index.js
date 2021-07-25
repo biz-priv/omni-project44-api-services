@@ -49,13 +49,13 @@ function sendNotification(bodyData) {
       })
       .catch(function (err) {
         console.error("Error : ", err);
-        reject("failure");
+        resolve("failure");
       });
   })
 
 }
 
-function setData(element) {
+async function setData(element) {
   let body
   if (element.region_code_basis == "S") {
     body = {
@@ -162,7 +162,8 @@ function setData(element) {
       "sourceType": "API"
     }
   }
-  return sendNotification(body);
+  return await sendNotification(body);
+
 }
 
 
@@ -179,58 +180,63 @@ module.exports.handler = async (event) => {
     return
   }
   response = await validate(response);
-  try {
-    dynamoData = await Dynamo.getAllScanRecord(PROJECT44_TABLE);
-  } catch (e) {
-    console.error("error : ", e);
-    return
-  }
-  let notMatchedResult = (response.rows).filter(compare(dynamoData));
-  let matchedRecord = dynamoData.filter(compareMatchRecord(response.rows));
-  if (notMatchedResult.length) {
-    let inputRecord = []
-    const promises = notMatchedResult.map(async (element) => {
-      element["time_stamp"] = moment().format(`YYYY-MM-DDTHH:mm:ssZZ`)
-      let sendNotificationResult = await setData(element);
-      let insertRecord
-      if (sendNotificationResult == 202) {
-        element["notification_sent"] = "Y"
-        insertRecord = {
-          "PutRequest": {
-            "Item": element
+  if (!response.code) {
+    try {
+      dynamoData = await Dynamo.getAllScanRecord(PROJECT44_TABLE);
+    } catch (e) {
+      console.error("error : ", e);
+      return
+    }
+    let notMatchedResult = (response.rows).filter(compare(dynamoData));
+    let matchedRecord = dynamoData.filter(compareMatchRecord(response.rows));
+    if (notMatchedResult.length) {
+      let inputRecord = []
+      let promises = notMatchedResult.map(async (element) => {
+        element["time_stamp"] = moment().format(`YYYY-MM-DDTHH:mm:ssZZ`)
+        let sendNotificationResult = await setData(element);
+        let insertRecord
+        if (sendNotificationResult == 202) {
+          element["notification_sent"] = "Y"
+          insertRecord = {
+            "PutRequest": {
+              "Item": element
+            }
           }
-        }
-        inputRecord.push(insertRecord)
-      } else if (sendNotificationResult == "failure") {
-        element["notification_sent"] = "N"
-        insertRecord = {
-          "PutRequest": {
-            "Item": element
+          inputRecord.push(insertRecord)
+        } else if (sendNotificationResult == "failure") {
+          element["notification_sent"] = "N"
+          insertRecord = {
+            "PutRequest": {
+              "Item": element
+            }
           }
+          inputRecord.push(insertRecord)
         }
-        inputRecord.push(insertRecord)
-      }
-    })
-    await Promise.all(promises)
-    if (inputRecord.length) {
-      try {
-        await Dynamo.batchInsertRecord(PROJECT44_TABLE, inputRecord);
-      } catch (e) {
-        console.error("Error : ", e);
-        return
-      }
-      if (matchedRecord.length) {
-        console.info("Info : ", matchedRecord)
-        await updateRecord(matchedRecord);
+      })
+      await Promise.all(promises)
+      if (inputRecord.length) {
+        try {
+          await Dynamo.batchInsertRecord(PROJECT44_TABLE, inputRecord);
+        } catch (e) {
+          console.error("Error : ", e);
+          return
+        }
+        if (matchedRecord.length) {
+          console.info("Info : ", matchedRecord)
+          await updateRecord(matchedRecord);
+          return
+        }
+      } else {
+        console.error("Error : failure to insert record");
         return
       }
     } else {
-      console.error("Error : failure to insert record");
+      console.info("Info : ", matchedRecord)
+      await updateRecord(matchedRecord);
       return
     }
   } else {
-    console.info("Info : ", matchedRecord)
-    await updateRecord(matchedRecord);
+    console.error("Error: ", JSON.stringify(response));
     return
   }
 };
