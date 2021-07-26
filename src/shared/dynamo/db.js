@@ -34,7 +34,7 @@ async function fetchByIndex(tableName, status, limit, startKey) {
     };
 
     if (startKey) {
-        params['ExclusiveStartKey'] = startKey
+        params['ExclusiveStartKey'] = startKey;
     }
     try {
         return await documentClient.query(params).promise();
@@ -90,9 +90,9 @@ async function itemInsert(tableName, record) {
     const params = {
         TableName: tableName,
         Item: record
-    }
+    };
     try {
-        return await documentClient.put(params).promise()
+        return await documentClient.put(params).promise();
     } catch (e) {
         console.error("itemInsert Error: ", e);
         throw handleError(1007, e, get(e, 'details[0].message', null));
@@ -111,7 +111,7 @@ async function apiKeyCreate(apiParams, usagePlanName) {
             usagePlanId: usagePlanName
         };
         await apigateway.createUsagePlanKey(params).promise();
-        return result
+        return result;
 
     } catch (e) {
         console.error("apigateway Error: ", e);
@@ -175,7 +175,7 @@ async function updateItems(tableName, hashKey, updateExpression, attributesValue
         Key: hashKey,
         UpdateExpression: updateExpression,
         ExpressionAttributeValues: attributesValues
-    }
+    };
     try {
         return await documentClient.update(params).promise();
     } catch (e) {
@@ -187,7 +187,7 @@ async function updateItems(tableName, hashKey, updateExpression, attributesValue
 /* get apikey from apigateway and delete it */
 async function apiKeyDelete(apiKeyName) {
     let apigateway = new AWS.APIGateway({ region: process.env.DEFAULT_AWS });
-    let apiKeyResult
+    let apiKeyResult;
     const params = {
         nameQuery: apiKeyName,
         includeValues: true
@@ -201,11 +201,11 @@ async function apiKeyDelete(apiKeyName) {
         if ((apiKeyResult.items).length) {
             const params = {
                 apiKey: apiKeyResult.items[0].id
-            }
+            };
             await apigateway.deleteApiKey(params).promise();
-            return apiKeyResult
+            return apiKeyResult;
         } else {
-            console.error("apigateway Error: ", handleError(1009))
+            console.error("apigateway Error: ", handleError(1009));
         }
     } catch (e) {
         console.error("apigateway Error: ", e);
@@ -215,7 +215,7 @@ async function apiKeyDelete(apiKeyName) {
 /* get apikey from apigateway and diassociate from usageplan */
 async function fetchApiKeyAndDisassociateUsagePlan(apiKeyName, usageId) {
     let apigateway = new AWS.APIGateway({ region: process.env.DEFAULT_AWS });
-    let apiKeyResult
+    let apiKeyResult;
     const params = {
         nameQuery: apiKeyName,
         includeValues: true
@@ -232,9 +232,9 @@ async function fetchApiKeyAndDisassociateUsagePlan(apiKeyName, usageId) {
                 usagePlanId: usageId
             };
             await apigateway.deleteUsagePlanKey(params).promise();
-            return apiKeyResult
+            return apiKeyResult;
         } else {
-            console.error("apigateway Error: ", handleError(1009))
+            console.error("apigateway Error: ", handleError(1009));
         }
     } catch (e) {
         console.error("apigateway Error: ", e);
@@ -244,7 +244,7 @@ async function fetchApiKeyAndDisassociateUsagePlan(apiKeyName, usageId) {
 /* get apikey from apigateway and check in usageplan */
 async function checkApiKeyUsagePlan(keyName, usageId) {
     let apigateway = new AWS.APIGateway({ region: process.env.DEFAULT_AWS });
-    let keyResult
+    let keyResult;
     const params = {
         nameQuery: keyName,
         includeValues: true
@@ -280,7 +280,7 @@ async function getItemQueryWithLimit(tableName, limit, keyCondition, expressionA
         ExpressionAttributeValues: expressionAttribute
     };
     if (startKey) {
-        params['ExclusiveStartKey'] = startKey
+        params['ExclusiveStartKey'] = startKey;
     }
     try {
         return await documentClient.query(params).promise();
@@ -298,12 +298,12 @@ async function getScanCount(tableName, filterExpression, expressionAttributeValu
         FilterExpression: filterExpression,
         ExpressionAttributeValues: expressionAttributeValues,
         Select: 'COUNT'
-    }
+    };
     try {
         return await documentClient.scan(params).promise();
     } catch (e) {
         console.error("getScanCount Error: ", e);
-        reject(handleError(1004, e, get(e, 'details[0].message', null)));
+        return await handleError(1004, e, get(e, 'details[0].message', null));
     }
 }
 
@@ -322,12 +322,12 @@ async function dbRead(params) {
 async function getAllScanRecord(tableName) {
     const params = {
         TableName: tableName
-    }
+    };
     try {
         return await dbRead(params);
     } catch (e) {
         console.error("getScanCount Error: ", e);
-        reject(handleError(1004, e, get(e, 'details[0].message', null)));
+        return await handleError(1004, e, get(e, 'details[0].message', null));
     }
 }
 
@@ -346,8 +346,6 @@ async function batchInsertRecord(tableName, records) {
         return await handleError(1007, e, get(e, 'details[0].message', null));
     }
 }
-
-
 
 module.exports = {
     fetchAllItems,

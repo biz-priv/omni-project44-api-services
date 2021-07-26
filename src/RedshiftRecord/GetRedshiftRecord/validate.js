@@ -4,29 +4,25 @@ const { handleError } = require('../../shared/utils/responses');
 
 
 const schema = Joi.object({
-    rows: Joi.array().items(
-        Joi.object({
-            file_nbr: Joi.string().required(),
-            order_status: Joi.string().required(),
-            ref_nbr: Joi.string().required(),
-            house_bill_nbr: Joi.string().empty('').default(null),
-            origin_port_iata: Joi.string().empty('').default(null),
-            destination_port_iata: Joi.string().empty('').default(null),
-            shipper_zip: Joi.string().empty('').default(null),
-            consignee_zip: Joi.string().empty('').default(null),
-            shipper_addr_1: Joi.string().empty('').default(null),
-            consignee_addr_1: Joi.string().empty('').default(null),
-            shipper_city: Joi.string().required(),
-            consignee_city: Joi.string().required(),
-            shipper_st: Joi.string().required(),
-            consignee_st: Joi.string().required(),
-            shipper_cntry: Joi.string().empty('').default(null),
-            consignee_cntry: Joi.string().empty('').default(null),
-            consignee_addr_2: Joi.string().optional().empty('').default(null),
-            shipper_addr_2: Joi.string().optional().empty('').default(null)
-        }).allow(null).unknown(true)
-    )
-}).allow(null).unknown(true)
+    file_nbr: Joi.string().required(),
+    order_status: Joi.string().required(),
+    ref_nbr: Joi.string().required(),
+    house_bill_nbr: Joi.string().required(),
+    origin_port_iata: Joi.string().empty('').default(null),
+    destination_port_iata: Joi.string().empty('').default(null),
+    shipper_zip: Joi.string().empty('').default(null),
+    consignee_zip: Joi.string().empty('').default(null),
+    shipper_addr_1: Joi.string().empty('').default(null),
+    consignee_addr_1: Joi.string().empty('').default(null),
+    shipper_city: Joi.string().required(),
+    consignee_city: Joi.string().required(),
+    shipper_st: Joi.string().required(),
+    consignee_st: Joi.string().required(),
+    shipper_cntry: Joi.string().empty('').default(null),
+    consignee_cntry: Joi.string().empty('').default(null),
+    consignee_addr_2: Joi.string().optional().empty('').default(null),
+    shipper_addr_2: Joi.string().optional().empty('').default(null)
+}).unknown(true)conso
 
 async function validate(event) {
     try {
