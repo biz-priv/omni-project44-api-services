@@ -14,7 +14,7 @@ provider:
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/sgId}
     subnetIds:
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetA}
-      # - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetB}
+      - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetB}
   iam: 
     role:
       statements:
@@ -40,22 +40,15 @@ custom:
     number: 3
   jest: 
     collectCoverage: true
-  
+
 package:
   individually: true
-  excludeDevDependencies: false
   exclude:
-    - 'node_modules/**'
-    - 'src/**'
-    - '*.*'
-    - 'config/**'
-    - 'Jenkinsfile'
+  # - '**/*'
+  - Jenkinsfile
 
 functions:
-
-    - ${file(config/RedshiftRecord/GetRedshiftRecord.yml)}
-
-
+  - ${file(config/functions/GetRedshiftRecord.yml)}
 
 plugins:
   - serverless-offline

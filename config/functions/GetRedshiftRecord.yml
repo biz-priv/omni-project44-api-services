@@ -1,10 +1,10 @@
 GetRedshiftRecord:
   handler: src/RedshiftRecord/GetRedshiftRecord/index.handler
-  layers:
-    - { Ref: CommonLibsLambdaLayer }  
+  # layers:
+  #   - { Ref: CommonLibsLambdaLayer }
   environment:
     DB_PORT: ${ssm:/omni-dw/devint/db/port}
-    DB_HOST: ${ssm:/omni-dw/devint/db/host~true} 
+    DB_HOST: ${ssm:/omni-dw/devint/db/host/url~true} 
     DB_PASSWORD: ${ssm:/omni-dw/devint/db/password~true}      
     DB_DATABASE: ${ssm:/omni-dw/devint/db/name}
     DB_USER: ${ssm:/omni-dw/devint/db/user~true}
@@ -14,14 +14,9 @@ GetRedshiftRecord:
     PROJECT44_PASSWORD: ${ssm:/omni-project44-api-services/devint/auth/password} 
     DEFAULT_AWS: ${self:provider.region}       
   package:
-    individually: true
     include:
-        - 'src/RedshiftRecord/GetRedshiftRecord/**'
-        - 'src/shared/**'
-  # events:
-  #   - http:
-  #       path: records
-  #       method: get
-  #       cors: true
-  #   # - eventBridge:
-  #   #    schedule: cron(0/2 * * * ? *)
+    - src/RedshiftRecord/GetRedshiftRecord/**
+    - src/shared/**
+    - node_modules/**
+  events:
+    - schedule: rate(1 hour)

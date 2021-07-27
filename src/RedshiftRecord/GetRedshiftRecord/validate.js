@@ -22,7 +22,7 @@ const schema = Joi.object({
     consignee_cntry: Joi.string().empty('').default(null),
     consignee_addr_2: Joi.string().optional().empty('').default(null),
     shipper_addr_2: Joi.string().optional().empty('').default(null)
-}).unknown(true)conso
+}).unknown(true);
 
 async function validate(event) {
     try {
