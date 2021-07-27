@@ -55,7 +55,10 @@ pipeline {
             steps {
                 withAWS(credentials: 'omni-aws-creds'){
                     sh """
-                    sceptre launch ${env.ENVIRONMENT} --yes
+                    npm i serverless
+                    npm i
+                    serverless --version
+                    sls deploy -s ${env.ENVIRONMENT}
                     """
                 }
             }
