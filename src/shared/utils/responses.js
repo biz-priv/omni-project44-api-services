@@ -1,22 +1,3 @@
-
-// send response 
-function send_response(http_code, resp = null) {
-    var resonseData
-    if (resp) {
-      var responseData = resp
-    }
-    return {
-        statusCode: http_code,
-        headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE",
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(responseData)
-    }
-}
-
 const errors = [
     //createOrder - parking
     { code: 1000, httpStatus: 500, message: 'Unable to process request.' },
@@ -63,8 +44,6 @@ function errorResponse(httpStatus, errCode, message) {
     }
 }
 
-/*============================================================= */
 module.exports = {
-    send_response,
     handleError
 }
