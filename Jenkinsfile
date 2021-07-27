@@ -10,7 +10,7 @@ pipeline {
                         env.ENVIRONMENT=env.getProperty("environment_devint")
                     } else if ("${GIT_BRANCH}".contains("develop")) {
                         env.ENVIRONMENT=env.getProperty("environment_develop")
-                    } else if ("${GIT_BRANCH}".contains("master")||("${GIT_BRANCH}".contains("hotfix")) {
+                    } else if ("${GIT_BRANCH}".contains("master") || "${GIT_BRANCH}".contains("hotfix")){
                         env.ENVIRONMENT=env.getProperty("environment_prod")
                     }
                     sh """
