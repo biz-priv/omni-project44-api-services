@@ -1,0 +1,64 @@
+service: omni-project44-api-services
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'devint'}
+  memorySize: 128 
+  timeout: 15 
+  deploymentBucket: ${ssm:/omni-dw/${self:provider.stage}/sls/deployment/bucket}
+  role: ${ssm:/omni-dw/${self:provider.stage}/lambda/role}
+  vpc:
+    securityGroupIds:
+      - ${ssm:/omni-dw/${self:provider.stage}/lambda/sgId}
+    subnetIds:
+      - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetA}
+      - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetB}
+  iam: 
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: '*'
+
+custom:
+  prune:
+    automatic: true
+    number: 3
+  jest: 
+    collectCoverage: true
+
+package:
+  individually: true
+  exclude:
+  # - '**/*'
+  - Jenkinsfile
+
+functions:
+  - ${file(config/functions/GetRedshiftRecord.yml)}
+
+plugins:
+  - serverless-offline
+  - serverless-prune-plugin
+
+layers:
+  commonLibs:
+    path: lib
+    compatibleRuntimes:
+      - nodejs14.x
+    package:      
+      include:
+        - node_modules/**
