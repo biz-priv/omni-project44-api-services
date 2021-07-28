@@ -5,8 +5,6 @@ provider:
   runtime: nodejs14.x
   region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'devint'}
-  memorySize: 128 
-  timeout: 15 
   deploymentBucket: ${ssm:/omni-dw/${self:provider.stage}/sls/deployment/bucket}
   role: ${ssm:/omni-dw/${self:provider.stage}/lambda/role}
   vpc:
@@ -15,24 +13,6 @@ provider:
     subnetIds:
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetA}
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetB}
-  iam: 
-    role:
-      statements:
-        - Effect: 'Allow'
-          Action:
-            - dynamodb:Query
-            - dynamodb:Scan
-            - dynamodb:GetItem
-            - dynamodb:PutItem
-            - dynamodb:UpdateItem
-            - dynamodb:DeleteItem
-          Resource: '*'
-        - Effect: Allow
-          Action:
-            - logs:CreateLogGroup
-            - logs:CreateLogStream
-            - logs:PutLogEvents
-          Resource: '*'
 
 custom:
   prune:
@@ -44,7 +24,6 @@ custom:
 package:
   individually: true
   exclude:
-  # - '**/*'
   - Jenkinsfile
 
 functions:
