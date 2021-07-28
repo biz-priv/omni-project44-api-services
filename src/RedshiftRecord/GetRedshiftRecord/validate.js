@@ -6,7 +6,7 @@ const { handleError } = require('../../shared/utils/responses');
 const schema = Joi.object({
     file_nbr: Joi.string().required(),
     order_status: Joi.string().required(),
-    ref_nbr: Joi.string().required(),
+    ref_nbr: Joi.string().required().default("null"),
     house_bill_nbr: Joi.string().required(),
     origin_port_iata: Joi.string().empty('').default(null),
     destination_port_iata: Joi.string().empty('').default(null),

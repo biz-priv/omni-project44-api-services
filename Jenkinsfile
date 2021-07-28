@@ -22,9 +22,7 @@ pipeline {
         stage('BizDev Deploy'){
             when {
                 anyOf {
-                    branch 'devint';
-                    branch 'feature/*';
-                    branch 'bugfix/*';
+                    branch 'devint'
                 }
                 expression {
                     return true;
@@ -45,8 +43,7 @@ pipeline {
             when {
                 anyOf {
                     branch 'develop';
-                    branch 'master';
-                    branch 'hotfix/*'
+                    branch 'master'
                 }
                 expression {
                     return true;
