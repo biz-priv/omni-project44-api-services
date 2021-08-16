@@ -12,6 +12,7 @@ provider:
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/sgId}
     subnetIds:
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetA}
+      - ${ssm:/omni-dw/${self:provider.stage}/lambda/subnetB}
 
 custom:
   prune:
