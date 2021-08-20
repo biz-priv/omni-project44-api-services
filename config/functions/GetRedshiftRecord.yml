@@ -20,4 +20,4 @@ GetRedshiftRecord:
     - src/shared/**
     - node_modules/**
   events:
-    - schedule: rate(1 hour)
+    - schedule: rate(30 minutes)
