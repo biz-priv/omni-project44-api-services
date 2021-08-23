@@ -1,7 +1,7 @@
 GetRedshiftRecord:
   handler: src/RedshiftRecord/GetRedshiftRecord/index.handler
   memorySize: 256
-  timeout: 30
+  timeout: 900
 
   environment:
     DB_PORT: ${ssm:/omni-dw/${self:provider.stage}/db/port}
