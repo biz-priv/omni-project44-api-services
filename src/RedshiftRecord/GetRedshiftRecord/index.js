@@ -1,6 +1,7 @@
 const { Client } = require("pg");
 const Dynamo = require('../../shared/dynamo/db');
 const PROJECT44_TABLE = process.env.PROJECT44_TABLE;
+const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;
 const moment = require('moment');
 const validate = require('./validate');
 const rp = require('request-promise');
@@ -11,6 +12,20 @@ function compare(otherArray) {
       return other.file_nbr == current.file_nbr && other.order_status == current.order_status;
     }).length == 0;
   };
+}
+
+async function recordInsert(keyData, jsonRecordObject) {
+  try {
+    const params = {
+      "file_nbr": keyData.file_nbr,
+      "order_status": keyData.order_status,
+      "json_msg": JSON.stringify(jsonRecordObject)
+    }
+    return await Dynamo.insertSingleRecord(PROJECT44_PAYLOAD_TABLE, params);
+  } catch (error) {
+    console.error("Error : ", error);
+    return;
+  }
 }
 
 function compareMatchRecord(otherArray) {
@@ -53,7 +68,7 @@ function sendNotification(element) {
             "source": "CAPACITY_PROVIDER"
           }
         ],
-        "statusCode": "READY_FOR_PICKUP",
+        "statusCode": element.order_status,
         "terminalCode": element.origin_port_iata,
         "stopType": "ORIGIN",
         "stopNumber": 0,
@@ -105,7 +120,7 @@ function sendNotification(element) {
             "source": "CAPACITY_PROVIDER"
           }
         ],
-        "statusCode": "READY_FOR_PICKUP",
+        "statusCode": element.order_status,
         "terminalCode": element.destination_port_iata,
         "stopType": "DESTINATION",
         "stopNumber": 1,
@@ -135,6 +150,7 @@ function sendNotification(element) {
         "sourceType": "API"
       };
     }
+    await recordInsert(element, bodyData);
     var options = {
       method: 'POST',
       uri: process.env.PROJECT44_ENDPOINT,
