@@ -10,7 +10,7 @@ GetRedshiftRecord:
     DB_DATABASE: ${ssm:/omni-dw/${self:provider.stage}/db/name}
     DB_USER: ${ssm:/omni-dw/${self:provider.stage}/db/user~true}
     PROJECT44_TABLE: ${ssm:/omni-dw/${self:provider.stage}/project44/table}
-    PROJECT44_PAYLOAD_TABLE: ${ssm:/omni-dw/prod/project44/table/payload}
+    PROJECT44_PAYLOAD_TABLE: ${ssm:/omni-dw/${self:provider.stage}/project44/table/payload}
     PROJECT44_ENDPOINT: ${ssm:/omni-project44-api-services/${self:provider.stage}/url}
     PROJECT44_USERNAME: ${ssm:/omni-project44-api-services/${self:provider.stage}/auth/username}
     PROJECT44_PASSWORD: ${ssm:/omni-project44-api-services/${self:provider.stage}/auth/password} 
