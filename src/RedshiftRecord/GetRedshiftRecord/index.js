@@ -5,6 +5,7 @@ const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;
 const moment = require('moment');
 const validate = require('./validate');
 const rp = require('request-promise');
+const orderStatusCode = require("./orderStatusCode.json");
 
 function compare(otherArray) {
   return function (current) {
@@ -18,7 +19,7 @@ async function recordInsert(keyData, jsonRecordObject) {
   try {
     const params = {
       "file_nbr": keyData.file_nbr,
-      "order_status": keyData.order_status,
+      "order_status": Object.keys(orderStatusCode).find(key => orderStatusCode[key] === keyData.order_status),
       "json_msg": JSON.stringify(jsonRecordObject)
     }
     return await Dynamo.insertSingleRecord(PROJECT44_PAYLOAD_TABLE, params);
@@ -201,7 +202,7 @@ module.exports.handler = async (event) => {
     try {
       dynamoData = await Dynamo.getAllScanRecord(PROJECT44_TABLE);
     } catch (e) {
-      console.error("error : ", e);
+      console.error("Error : ", e);
       return;
     }
     let notMatchedResult = (response.rows).filter(compare(dynamoData));
@@ -214,13 +215,19 @@ module.exports.handler = async (event) => {
         await sleep(1000);
         let validResult = await validate(notMatchedResult[x]);
         if (!validResult.code) {
-          promises.push(sendNotification(validResult));
+          validResult["order_status"] = orderStatusCode[validResult.order_status];
+          if (validResult["order_status"] != undefined) {
+            promises.push(sendNotification(validResult));
+          } else {
+            console.error("Error : ", JSON.stringify(validResult));
+          }
         } else {
           console.error("Error : ", JSON.stringify(validResult));
         }
       }
       await Promise.all(promises).then((result) => {
         result.map(async (element) => {
+          element.Data["order_status"] = Object.keys(orderStatusCode).find(key => orderStatusCode[key] === element.Data.order_status);
           let insertRecord;
           if (element.status == 202) {
             element.Data["notification_sent"] = "Y";
@@ -258,6 +265,7 @@ module.exports.handler = async (event) => {
         }
       } else {
         console.error("Error : failure to insert record");
+        await updateRecord(matchedRecord);
         return;
       }
     } else {
@@ -288,12 +296,18 @@ async function updateRecord(arrayRecord) {
     if (arrayRecord[x]["notification_sent"] == "N") {
       arrayRecord[x]["time_stamp"] = timestamp;
       await sleep(1000);
-      promises.push(sendNotification(arrayRecord[x]));
+      arrayRecord[x]["order_status"] = orderStatusCode[arrayRecord[x]["order_status"]];
+      if (arrayRecord[x]["order_status"] != undefined) {
+        promises.push(sendNotification(arrayRecord[x]));
+      } else {
+        console.error("Error : ", JSON.stringify(arrayRecord[x]));
+      }
     }
   }
   await Promise.all(promises).then(async (records) => {
     for (let x in records) {
       if (records[x].status == 202) {
+        records[x].Data["order_status"] = Object.keys(orderStatusCode).find(key => orderStatusCode[key] === records[x].Data.order_status);
         await Dynamo.updateItems(PROJECT44_TABLE, { file_nbr: records[x].Data.file_nbr, order_status: records[x].Data.order_status }, 'set notification_sent = :x, time_stamp = :time', { ":x": "Y", ":time": timestamp });
       }
     }
