@@ -82,9 +82,25 @@ async function batchInsertRecord(tableName, records) {
     }
 }
 
+/* insert single record */
+async function insertSingleRecord(tableName, records) {
+    const documentClient = new AWS.DynamoDB.DocumentClient({ region: process.env.DEFAULT_AWS });
+    const params = {
+        TableName : tableName,
+        Item: records
+    };
+    try {
+        return await documentClient.put(params).promise();
+    } catch (e) {
+        console.error("insert Error: ", e);
+        return await handleError(1007, e, get(e, 'details[0].message', null));
+    }
+}
+
 module.exports = {
     updateItems,
     getScanCount,
     getAllScanRecord,
-    batchInsertRecord
+    batchInsertRecord,
+    insertSingleRecord
 };

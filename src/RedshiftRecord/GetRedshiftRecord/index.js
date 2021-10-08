@@ -1,9 +1,11 @@
 const { Client } = require("pg");
 const Dynamo = require('../../shared/dynamo/db');
 const PROJECT44_TABLE = process.env.PROJECT44_TABLE;
+const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;
 const moment = require('moment');
 const validate = require('./validate');
 const rp = require('request-promise');
+const orderStatusCode = require("./orderStatusCode.json");
 
 function compare(otherArray) {
   return function (current) {
@@ -11,6 +13,20 @@ function compare(otherArray) {
       return other.file_nbr == current.file_nbr && other.order_status == current.order_status;
     }).length == 0;
   };
+}
+
+async function recordInsert(keyData, jsonRecordObject) {
+  try {
+    const params = {
+      "file_nbr": keyData.file_nbr,
+      "order_status": Object.keys(orderStatusCode).find(key => orderStatusCode[key] === keyData.order_status),
+      "json_msg": JSON.stringify(jsonRecordObject)
+    }
+    return await Dynamo.insertSingleRecord(PROJECT44_PAYLOAD_TABLE, params);
+  } catch (error) {
+    console.error("Error : ", error);
+    return;
+  }
 }
 
 function compareMatchRecord(otherArray) {
@@ -53,7 +69,7 @@ function sendNotification(element) {
             "source": "CAPACITY_PROVIDER"
           }
         ],
-        "statusCode": "READY_FOR_PICKUP",
+        "statusCode": element.order_status,
         "terminalCode": element.origin_port_iata,
         "stopType": "ORIGIN",
         "stopNumber": 0,
@@ -105,7 +121,7 @@ function sendNotification(element) {
             "source": "CAPACITY_PROVIDER"
           }
         ],
-        "statusCode": "READY_FOR_PICKUP",
+        "statusCode": element.order_status,
         "terminalCode": element.destination_port_iata,
         "stopType": "DESTINATION",
         "stopNumber": 1,
@@ -135,6 +151,7 @@ function sendNotification(element) {
         "sourceType": "API"
       };
     }
+    await recordInsert(element, bodyData);
     var options = {
       method: 'POST',
       uri: process.env.PROJECT44_ENDPOINT,
@@ -149,10 +166,12 @@ function sendNotification(element) {
     rp(options)
       .then(async (returnData) => {
         console.info("Info : Notification sent successfully", returnData.statusCode);
+        element["project44Response"] = JSON.stringify({ "httpStatusCode": returnData.statusCode, "message": "success" }) 
         resolve({ "status": returnData.statusCode, "Data": element });
       })
       .catch(async (err) => {
         console.error("Error : ", err);
+        element["project44Response"] = JSON.stringify(err.error)
         resolve({ "status": "failure", "Data": element });
       });
   });
@@ -172,7 +191,7 @@ module.exports.handler = async (event) => {
   try {
     await client.connect();
     response = await client.query(
-      "select shipment_info.file_nbr ,shipment_info.house_bill_nbr ,shipment_info.bill_to_nbr ,shipment_info.origin_port_iata ,shipment_info.destination_port_iata , shipment_info.shipper_name ,shipment_info.shipper_addr_1 ,shipment_info.shipper_addr_2 ,shipment_info.shipper_city ,shipment_info.shipper_st , shipment_info.shipper_cntry ,shipment_info.shipper_zip , shipment_info.consignee_name ,shipment_info.consignee_addr_1 ,shipment_info.consignee_addr_2 ,shipment_info.consignee_city ,shipment_info.consignee_st , shipment_info.consignee_cntry ,shipment_info.consignee_zip , shipment_milestone.order_status ,shipment_milestone.order_status_desc ,shipment_milestone.region_code_basis ,shipment_Ref.ref_nbr from shipment_info left outer join shipment_milestone on shipment_info.source_system = shipment_milestone.source_system and shipment_info.file_nbr = shipment_milestone.file_nbr and is_custompublic = 'Y' left outer join (select source_system ,file_nbr ,ref_nbr from shipment_ref where ref_typeid = 'PO' and customer_type = 'B')shipment_Ref on shipment_info.source_system = shipment_Ref.source_system and shipment_info.file_nbr = shipment_Ref.file_nbr WHERE shipment_info.bill_to_nbr = '11912' and shipment_milestone.event_date > current_timestamp - interval '2 hour'"
+      "select shipment_info.file_nbr ,shipment_info.house_bill_nbr ,shipment_info.bill_to_nbr ,shipment_info.origin_port_iata ,shipment_info.destination_port_iata , shipment_info.shipper_name ,shipment_info.shipper_addr_1 ,shipment_info.shipper_addr_2 ,shipment_info.shipper_city ,shipment_info.shipper_st , shipment_info.shipper_cntry ,shipment_info.shipper_zip , shipment_info.consignee_name ,shipment_info.consignee_addr_1 ,shipment_info.consignee_addr_2 ,shipment_info.consignee_city ,shipment_info.consignee_st , shipment_info.consignee_cntry ,shipment_info.consignee_zip , shipment_milestone.order_status ,shipment_milestone.order_status_desc ,shipment_milestone.region_code_basis ,shipment_Ref.ref_nbr from shipment_info left outer join shipment_milestone on shipment_info.source_system = shipment_milestone.source_system and shipment_info.file_nbr = shipment_milestone.file_nbr and is_custompublic = 'Y' left outer join (select source_system ,file_nbr ,ref_nbr from (select distinct source_system ,file_nbr ,pk_Ref_nbr,ref_nbr, rank() over (partition by file_nbr order by ref_typeid,pk_Ref_nbr)rk from shipment_ref where ref_typeid in  ('PO','REF') and customer_type = 'B')Z where z.rk = 1) shipment_Ref on shipment_info.source_system = shipment_Ref.source_system and shipment_info.file_nbr = shipment_Ref.file_nbr WHERE shipment_info.bill_to_nbr = '11912' and shipment_milestone.event_date > convert_timezone('CDT', sysdate) - interval '4 hour'"
     );
     console.info("Redshift response : ", response.rows);
     await client.end();
@@ -185,7 +204,7 @@ module.exports.handler = async (event) => {
     try {
       dynamoData = await Dynamo.getAllScanRecord(PROJECT44_TABLE);
     } catch (e) {
-      console.error("error : ", e);
+      console.error("Error : ", e);
       return;
     }
     let notMatchedResult = (response.rows).filter(compare(dynamoData));
@@ -198,13 +217,19 @@ module.exports.handler = async (event) => {
         await sleep(1000);
         let validResult = await validate(notMatchedResult[x]);
         if (!validResult.code) {
-          promises.push(sendNotification(validResult));
+          validResult["order_status"] = orderStatusCode[validResult.order_status];
+          if (validResult["order_status"] != undefined) {
+            promises.push(sendNotification(validResult));
+          } else {
+            console.error("Error : ", JSON.stringify(validResult));
+          }
         } else {
           console.error("Error : ", JSON.stringify(validResult));
         }
       }
       await Promise.all(promises).then((result) => {
         result.map(async (element) => {
+          element.Data["order_status"] = Object.keys(orderStatusCode).find(key => orderStatusCode[key] === element.Data.order_status);
           let insertRecord;
           if (element.status == 202) {
             element.Data["notification_sent"] = "Y";
@@ -242,6 +267,7 @@ module.exports.handler = async (event) => {
         }
       } else {
         console.error("Error : failure to insert record");
+        await updateRecord(matchedRecord);
         return;
       }
     } else {
@@ -272,12 +298,18 @@ async function updateRecord(arrayRecord) {
     if (arrayRecord[x]["notification_sent"] == "N") {
       arrayRecord[x]["time_stamp"] = timestamp;
       await sleep(1000);
-      promises.push(sendNotification(arrayRecord[x]));
+      arrayRecord[x]["order_status"] = orderStatusCode[arrayRecord[x]["order_status"]];
+      if (arrayRecord[x]["order_status"] != undefined) {
+        promises.push(sendNotification(arrayRecord[x]));
+      } else {
+        console.error("Error : ", JSON.stringify(arrayRecord[x]));
+      }
     }
   }
   await Promise.all(promises).then(async (records) => {
     for (let x in records) {
       if (records[x].status == 202) {
+        records[x].Data["order_status"] = Object.keys(orderStatusCode).find(key => orderStatusCode[key] === records[x].Data.order_status);
         await Dynamo.updateItems(PROJECT44_TABLE, { file_nbr: records[x].Data.file_nbr, order_status: records[x].Data.order_status }, 'set notification_sent = :x, time_stamp = :time', { ":x": "Y", ":time": timestamp });
       }
     }
