@@ -24,7 +24,7 @@ pipeline {
                 anyOf {
                     branch 'devint';
                     branch 'feature/*';
-                    branch 'bugfix/*';
+                    branch 'bugfix/*'
                 }
                 expression {
                     return true;
@@ -45,8 +45,7 @@ pipeline {
             when {
                 anyOf {
                     branch 'develop';
-                    branch 'master';
-                    branch 'hotfix/*'
+                    branch 'master'
                 }
                 expression {
                     return true;

@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const get = require('lodash.get');
+const PROJECT44_TABLE = process.env.PROJECT44_TABLE;
 const { handleError } = require('../utils/responses');
 
 /* update record */
@@ -37,14 +38,18 @@ async function getScanCount(tableName, filterExpression, expressionAttributeValu
 }
 
 async function dbRead(params) {
-    const documentClient = new AWS.DynamoDB.DocumentClient({ region: process.env.DEFAULT_AWS });
-    let result = await documentClient.scan(params).promise();
-    let data = result.Items;
-    if (result.LastEvaluatedKey) {
-        params.ExclusiveStartKey = result.LastEvaluatedKey;
-        data = data.concat(await dbRead(params));
-    }
-    return data;
+    try {
+        const documentClient = new AWS.DynamoDB.DocumentClient({ region: process.env.DEFAULT_AWS });
+        let result = await documentClient.scan(params).promise();
+        let data = result.Items;
+        if (result.LastEvaluatedKey) {
+            params.ExclusiveStartKey = result.LastEvaluatedKey;
+            data = data.concat(await dbRead(params));
+        }
+        return data;
+    } catch (e) {
+        console.error("dbread Error: ", e);
+        return await handleError(1004, e, get(e, 'details[0].message', null)); }
 }
 
 //using this 
@@ -66,7 +71,7 @@ async function batchInsertRecord(tableName, records) {
     const documentClient = new AWS.DynamoDB.DocumentClient({ region: process.env.DEFAULT_AWS });
     const params = {
         RequestItems: {
-            'omni-dw-project-44-devint': records
+            [PROJECT44_TABLE] : records
         }
     };
     try {
@@ -77,9 +82,25 @@ async function batchInsertRecord(tableName, records) {
     }
 }
 
+/* insert single record */
+async function insertSingleRecord(tableName, records) {
+    const documentClient = new AWS.DynamoDB.DocumentClient({ region: process.env.DEFAULT_AWS });
+    const params = {
+        TableName : tableName,
+        Item: records
+    };
+    try {
+        return await documentClient.put(params).promise();
+    } catch (e) {
+        console.error("insert Error: ", e);
+        return await handleError(1007, e, get(e, 'details[0].message', null));
+    }
+}
+
 module.exports = {
     updateItems,
     getScanCount,
     getAllScanRecord,
-    batchInsertRecord
+    batchInsertRecord,
+    insertSingleRecord
 };
