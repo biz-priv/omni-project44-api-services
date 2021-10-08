@@ -166,12 +166,12 @@ function sendNotification(element) {
     rp(options)
       .then(async (returnData) => {
         console.info("Info : Notification sent successfully", returnData.statusCode);
-        element["project44Response"] = JSON.stringify({ "httpCode": returnData.statusCode, "message": "success" }) 
+        element["project44Response"] = JSON.stringify({ "httpStatusCode": returnData.statusCode, "message": "success" }) 
         resolve({ "status": returnData.statusCode, "Data": element });
       })
       .catch(async (err) => {
         console.error("Error : ", err);
-        element["project44Response"] = JSON.stringify({ "httpCode": err.error.httpStatusCode, "httpMessage": err.error.httpMessage, "message": err.error.errorMessage })
+        element["project44Response"] = JSON.stringify(err.error)
         resolve({ "status": "failure", "Data": element });
       });
   });
