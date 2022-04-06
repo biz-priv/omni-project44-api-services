@@ -170,7 +170,7 @@ function sendNotification(element) {
         resolve({ "status": returnData.statusCode, "Data": element });
       })
       .catch(async (err) => {
-        console.error("Error : ", err);
+        console.error("Error ==> 173 : ", err);
         element["project44Response"] = JSON.stringify(err.error)
         resolve({ "status": "failure", "Data": element });
       });
@@ -204,12 +204,13 @@ module.exports.handler = async (event) => {
     try {
       dynamoData = await Dynamo.getAllScanRecord(PROJECT44_TABLE);
     } catch (e) {
-      console.error("Error : ", e);
+      console.error("Scan Record Error ==> 207 : ", e);
       return;
     }
     let notMatchedResult = (response.rows).filter(compare(dynamoData));
     let matchedRecord = dynamoData.filter(compareMatchRecord(response.rows));
     if (notMatchedResult.length) {
+      console.info("Info ==> 213 : Found unique records. Total Count : ", notMatchedResult.length);
       let inputRecord = [];
       let promises = [];
       for (let x in notMatchedResult) {
@@ -221,10 +222,10 @@ module.exports.handler = async (event) => {
           if (validResult["order_status"] != undefined) {
             promises.push(sendNotification(validResult));
           } else {
-            console.error("Error : ", JSON.stringify(validResult));
+            console.error("Error ==> 225 : ", JSON.stringify(validResult));
           }
         } else {
-          console.error("Error : ", JSON.stringify(validResult));
+          console.error("Error ==> 228 : ", JSON.stringify(validResult));
         }
       }
       await Promise.all(promises).then((result) => {
@@ -257,26 +258,26 @@ module.exports.handler = async (event) => {
             await Dynamo.batchInsertRecord(PROJECT44_TABLE, recordInsert[x]);
           }
         } catch (e) {
-          console.error("Error : ", e);
+          console.error("Batch Insert Error ==> 261 : ", e);
           return;
         }
         if (matchedRecord.length) {
-          console.info("Info : ", matchedRecord);
+          console.info("Info ==> 265 : Matched Records : ", matchedRecord);
           await updateRecord(matchedRecord);
           return;
         }
       } else {
-        console.error("Error : failure to insert record");
+        console.error("Error ==> 270 : failure to insert record");
         await updateRecord(matchedRecord);
         return;
       }
     } else {
-      console.info("Info : ", matchedRecord);
+      console.info("Info ==> 275 : ", matchedRecord);
       await updateRecord(matchedRecord);
       return;
     }
   } else {
-    console.error("Error: ", JSON.stringify(response));
+    console.error("Error ==> 280 : ", JSON.stringify(response));
     return;
   }
 };
@@ -302,7 +303,7 @@ async function updateRecord(arrayRecord) {
       if (arrayRecord[x]["order_status"] != undefined) {
         promises.push(sendNotification(arrayRecord[x]));
       } else {
-        console.error("Error : ", JSON.stringify(arrayRecord[x]));
+        console.error("Error ==> 306 : ", JSON.stringify(arrayRecord[x]));
       }
     }
   }
