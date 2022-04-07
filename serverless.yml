@@ -18,13 +18,15 @@ custom:
   prune:
     automatic: true
     number: 3
-  jest: 
+  jest:
     collectCoverage: true
 
 package:
   individually: true
   exclude:
-  - Jenkinsfile
+    - Jenkinsfile
+    - 'node_modules/**'
+    - 'config/**'
 
 functions:
   - ${file(config/functions/GetRedshiftRecord.yml)}
@@ -34,10 +36,10 @@ plugins:
   - serverless-prune-plugin
 
 layers:
-  commonLibs:
+  commonP44Libs:
     path: lib
     compatibleRuntimes:
       - nodejs14.x
-    package:      
+    package:
       include:
         - node_modules/**

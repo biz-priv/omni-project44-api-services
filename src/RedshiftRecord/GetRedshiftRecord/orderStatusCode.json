@@ -7,5 +7,6 @@
       "APD": "UPDATED_DELIVERY_APPT",
       "TTC": "DEPARTED_TERMINAL",
       "OFD": "OUT_FOR_DELIVERY",
-      "DEL": "DELIVERED"
+      "DEL": "DELIVERED",
+      "WEB": "NEW_WEB_SHIPMENT"
 }
