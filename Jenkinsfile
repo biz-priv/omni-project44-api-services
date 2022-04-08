@@ -35,6 +35,9 @@ pipeline {
                     sh """
                     npm i serverless
                     npm i
+                    cd lib/nodejs
+                    npm i
+                    cd ../..
                     serverless --version
                     sls deploy -s ${env.ENVIRONMENT}
                     """
@@ -56,6 +59,9 @@ pipeline {
                     sh """
                     npm i serverless
                     npm i
+                    cd lib/nodejs
+                    npm i
+                    cd ../..
                     serverless --version
                     sls deploy -s ${env.ENVIRONMENT}
                     """
