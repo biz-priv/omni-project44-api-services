@@ -100,3 +100,4 @@ dist
 package-lock.json
 #zip files
 *.zip
+doc.txt
