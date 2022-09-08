@@ -1,21 +1,22 @@
 {
-    "name": "omni-project44-api-services",
-    "version": "1.0.0",
-    "description": "This is serverless app using aws and lambda",
-    "main": "",
-    "scripts": {
-        "deploy": "sls deploy"
-    },
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "aws-sdk": "^2.930.0",
-        "cors": "^2.8.5",
-        "joi": "^17.4.0",
-        "lodash.get": "^4.4.2",
-        "lodash.set": "^4.3.2",
-        "moment": "^2.29.1",
-        "pg": "^8.6.0",
-        "request-promise": "^4.2.6"
-    }
+  "name": "omni-project44-api-services",
+  "version": "1.0.0",
+  "description": "This is serverless app using aws and lambda",
+  "main": "",
+  "scripts": {
+    "deploy": "sls deploy"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.930.0",
+    "cors": "^2.8.5",
+    "joi": "^17.4.0",
+    "lodash.get": "^4.4.2",
+    "lodash.set": "^4.3.2",
+    "moment": "^2.29.1",
+    "pg": "^8.6.0",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6"
+  }
 }
