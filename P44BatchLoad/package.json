@@ -1,0 +1,18 @@
+{
+  "name": "p44-batch-load",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1163.0",
+    "lodash": "^4.17.21",
+    "zlib": "^1.0.5"
+  }
+}

@@ -1,7 +1,7 @@
 GetRedshiftRecord:
   handler: src/RedshiftRecord/GetRedshiftRecord/index.handler
-  layers:
-    - { Ref: CommonP44LibsLambdaLayer }
+  # layers:
+  #   - { Ref: CommonP44LibsLambdaLayer }
   memorySize: 256
   timeout: 900
 

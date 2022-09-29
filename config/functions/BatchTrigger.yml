@@ -1,0 +1,29 @@
+---
+  function:
+    name:  omni-dw-project44-batch-trigger-${self:provider.stage}
+    handler: src/Batch/TriggerBatchJob.BatchJobHandler
+    memorySize: 256
+    timeout: 60
+    # layers:
+    #   - { Ref: CommonP44LibsLambdaLayer }
+    package:
+      individually: true
+      include:
+        - src/Batch/**
+        - src/shared/**
+    environment:
+      P44_BATCH_JOB_DEFINITION: !Ref P44JobDefinition
+      P44_BATCH_JOB_NAME:  omni-dw-project44-batch-job-${self:provider.stage}
+      JOB_QUEUE: !Ref OmniJobQueue
+      PROJECT44_PAYLOAD_TABLE: ${ssm:/omni-dw/${self:provider.stage}/project44/table/payload}
+    # events:
+    #   - schedule: rate(60 minutes)
+    iamRoleStatementsName: omni-dw-project44-batch-trigger-${self:provider.stage}-role
+    iamRoleStatements:
+      -
+        Effect: "Allow"
+        Action:
+        - "batch:Describe*"
+        - "batch:List*"
+        - "batch:SubmitJob"
+        Resource: "*"
