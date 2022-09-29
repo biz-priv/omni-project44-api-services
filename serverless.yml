@@ -36,14 +36,16 @@ plugins:
   - serverless-offline
   - serverless-prune-plugin
 
-# layers:
-#   commonP44Libs:
-#     path: lib
-#     compatibleRuntimes:
-#       - nodejs14.x
-#     package:
-#       include:
-#         - node_modules/**
+layers:
+  commonP44Libs:
+    path: lib
+    compatibleRuntimes:
+      - nodejs14.x
+    name: ${self:service}-lambda-layer-${self:provider.stage}
+    description: p44 lambda layer for all node modules - ${self:provider.stage}
+    # package:
+    #   include:
+    #     - node_modules/**
 
 resources:
   Resources:

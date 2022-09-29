@@ -4,13 +4,12 @@
     handler: src/Batch/TriggerBatchJob.BatchJobHandler
     memorySize: 256
     timeout: 60
-    # layers:
-    #   - { Ref: CommonP44LibsLambdaLayer }
+    layers:
+      - { Ref: CommonP44LibsLambdaLayer }
     package:
-      individually: true
-      include:
-        - src/Batch/**
-        - src/shared/**
+      patterns:
+        - '!**/*'
+        - 'src/Batch/TriggerBatchJob.js'
     environment:
       P44_BATCH_JOB_DEFINITION: !Ref P44JobDefinition
       P44_BATCH_JOB_NAME:  omni-dw-project44-batch-job-${self:provider.stage}
