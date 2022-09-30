@@ -190,7 +190,7 @@ async function execHandler() {
   try {
     await client.connect();
     response = await client.query(
-      `select * from project44 where message_sent = ''`
+      `select * from project44 where message_sent = '' order by file_nbr, event_date`
     );
     console.info("Redshift response : ", JSON.stringify(response.rows));
     await client.end();
@@ -208,10 +208,9 @@ async function execHandler() {
     let inputRecord = [];
     let promises = [];
     for (let x in queryResponse) {
-      queryResponse[x]["event_date"] = moment(queryResponse[x]["event_date"]).format(
-        `YYYY-MM-DDTHH:mm:ssZZ`
-      );
-      queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"]
+      console.log("event_date", queryResponse[x]["event_date"])
+      queryResponse[x]["event_date"] = (((queryResponse[x]["event_date"]).toISOString()).substring(0, 19)) + "-05:00";
+      queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"];
       await sleep(1000);
       let validResult = await validate(queryResponse[x]);
       if (!validResult.code) {
