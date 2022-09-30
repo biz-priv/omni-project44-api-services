@@ -22,7 +22,7 @@ P44JobBatchTaskExecutionRole:
               - 'logs:CreateLogStream'
               - 'logs:PutLogEvents'
             Resource: '*'
-      - PolicyName: omni-dw-project44-batch-task-policy
+      - PolicyName: omni-dw-project44-batch-task-policy-${self:provider.stage}
         PolicyDocument:
           Statement:
           - Effect: Allow
@@ -30,7 +30,7 @@ P44JobBatchTaskExecutionRole:
               - 'redshift:*'
               - 'redshift-serverless:*'
             Resource: '*'
-      - PolicyName: omni-dw-project44-ecs-task-dynamo-policy
+      - PolicyName: omni-dw-project44-ecs-task-dynamo-policy-${self:provider.stage}
         PolicyDocument:
           Statement:
           - Effect: Allow
@@ -45,7 +45,7 @@ P44JobBatchTaskExecutionRole:
               - dynamodb:BatchWriteItem
               - dynamodb:BatchGetItem
             Resource:
-              - arn:aws:dynamodb:us-east-1:332281781429:table/omni-dw-project-44-payload-dev
+              - arn:aws:dynamodb:us-east-1:332281781429:table/omni-dw-project-44-payload-${self:provider.stage}
 
 P44JobDefinition:
   Type: AWS::Batch::JobDefinition
@@ -75,7 +75,7 @@ P44JobDefinition:
           awslogs-stream-prefix: omni-dw-project44-batch-logs
       ExecutionRoleArn: !GetAtt 'P44JobBatchTaskExecutionRole.Arn'
       JobRoleArn: !GetAtt 'P44JobBatchTaskExecutionRole.Arn'
-      Image: 332281781429.dkr.ecr.us-east-1.amazonaws.com/omni-dw-project44-batch:1
+      Image: 332281781429.dkr.ecr.us-east-1.amazonaws.com/omni-dw-project44-batch-${self:provider.stage}:1
       NetworkConfiguration:
         AssignPublicIp: ENABLED
 
