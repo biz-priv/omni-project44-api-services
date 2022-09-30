@@ -243,6 +243,7 @@ async function execHandler() {
           let replacedData = JSON.stringify(inputRecord);
           replacedData = replacedData.replace("[", "(")
           replacedData = replacedData.replace("]", ")");
+          replacedData = replacedData.replace(/"/gi, "'");
           console.info("replacedData : ", replacedData);
           await redshiftBatchUpdate(replacedData);
           console.info("record processed successfully")
