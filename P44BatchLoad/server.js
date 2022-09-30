@@ -1,6 +1,5 @@
 const { Client } = require("pg");
 const Dynamo = require("./shared/dynamo/db");
-// const PROJECT44_TABLE = process.env.PROJECT44_TABLE;
 const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;
 const moment = require("moment");
 const validate = require("./validate");
@@ -159,7 +158,7 @@ function sendNotification(element) {
     rp(options)
       .then(async (returnData) => {
         console.info(
-          "file_nbr : " + element.file_nbr,"order_status : " + element.order_status,"event_date : " + element.time_stamp,
+          "file_nbr : " + element.file_nbr, "order_status : " + element.order_status, "event_date : " + element.time_stamp,
           "Info : Notification sent successfully",
           returnData.statusCode
         );
@@ -171,7 +170,7 @@ function sendNotification(element) {
         resolve({ status: returnData.statusCode, Data: element });
       })
       .catch(async (err) => {
-        console.error( "file_nbr : " + element.file_nbr,"order_status : " + element.order_status,"event_date : " + element.time_stamp,"\nError ==> 173 : ", err);
+        console.error("file_nbr : " + element.file_nbr, "order_status : " + element.order_status, "event_date : " + element.time_stamp, "\nError ==> 173 : ", err);
         element["project44Response"] = JSON.stringify(err.error);
         await recordInsert(element, bodyData);
         resolve({ status: "failure", Data: element });
@@ -180,7 +179,6 @@ function sendNotification(element) {
 }
 
 async function execHandler() {
-  // console.info("EVENT: ", JSON.stringify(event));
   const client = new Client({
     database: process.env.DB_DATABASE,
     host: process.env.DB_HOST,
@@ -188,11 +186,11 @@ async function execHandler() {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
   });
-  let response, dynamoData;
+  let response;
   try {
     await client.connect();
     response = await client.query(
-      `select * from project44 where message_sent = '' limit 5`
+      `select * from project44 where message_sent = ''`
     );
     console.info("Redshift response : ", JSON.stringify(response.rows));
     await client.end();
@@ -202,66 +200,66 @@ async function execHandler() {
   }
 
   if (response.rows.length) {
-      let queryResponse = response.rows;
-      console.info(
-        "Info ==> 213 : Found unique records. Total Count : ",
-        queryResponse.length
+    let queryResponse = response.rows;
+    console.info(
+      "Info ==> 213 : Found unique records. Total Count : ",
+      queryResponse.length
+    );
+    let inputRecord = [];
+    let promises = [];
+    for (let x in queryResponse) {
+      queryResponse[x]["event_date"] = moment(queryResponse[x]["event_date"]).format(
+        `YYYY-MM-DDTHH:mm:ssZZ`
       );
-      let inputRecord = [];
-      let promises = [];
-      for (let x in queryResponse) {
-        queryResponse[x]["event_date"] = moment(queryResponse[x]["event_date"]).format(
-          `YYYY-MM-DDTHH:mm:ssZZ`
-        );
-        queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"]
-        await sleep(1000);
-        let validResult = await validate(queryResponse[x]);
-        if (!validResult.code) {
-          validResult["order_status"] =
-            orderStatusCode[validResult.order_status];
-          if (validResult["order_status"] != undefined) {
-            promises.push(sendNotification(validResult));
-          } else {
-            console.error("Error ==> 225 : ", JSON.stringify(validResult));
-          }
+      queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"]
+      await sleep(1000);
+      let validResult = await validate(queryResponse[x]);
+      if (!validResult.code) {
+        validResult["order_status"] =
+          orderStatusCode[validResult.order_status];
+        if (validResult["order_status"] != undefined) {
+          promises.push(sendNotification(validResult));
         } else {
-          console.error("Error ==> 228 : ", JSON.stringify(validResult));
-        }
-      }
-      await Promise.all(promises).then((result) => {
-        result.map(async (element) => {
-          element.Data["order_status"] = Object.keys(orderStatusCode).find(
-            (key) => orderStatusCode[key] === element.Data.order_status
-          );
-          if (element.status == 202) {
-            inputRecord.push(element.Data.id);
-          }
-        });
-      });
-      if (inputRecord.length) {
-        try {
-          let replacedData = JSON.stringify(inputRecord);
-          replacedData = replacedData.replace("[", "(")
-          replacedData = replacedData.replace("]", ")");
-          replacedData = replacedData.replace(/"/gi, "'");
-          console.info("replacedData : ", replacedData);
-          await redshiftBatchUpdate(replacedData);
-          console.info("record processed successfully")
-          return "record processed successfully";
-        } catch (e) {
-          console.error("Batch Update Error ==> 261 : ", e);
-          return;
+          console.error("Error ==> 225 : ", JSON.stringify(validResult));
         }
       } else {
-        console.error("Error ==> 270 : failure to insert record");
+        console.error("Error ==> 228 : ", JSON.stringify(validResult));
+      }
+    }
+    await Promise.all(promises).then((result) => {
+      result.map(async (element) => {
+        element.Data["order_status"] = Object.keys(orderStatusCode).find(
+          (key) => orderStatusCode[key] === element.Data.order_status
+        );
+        if (element.status == 202) {
+          inputRecord.push(element.Data.id);
+        }
+      });
+    });
+    if (inputRecord.length) {
+      try {
+        let replacedData = JSON.stringify(inputRecord);
+        replacedData = replacedData.replace("[", "(")
+        replacedData = replacedData.replace("]", ")");
+        replacedData = replacedData.replace(/"/gi, "'");
+        console.info("replacedData : ", replacedData);
+        await redshiftBatchUpdate(replacedData);
+        console.info("record processed successfully")
+        return "record processed successfully";
+      } catch (e) {
+        console.error("Batch Update Error ==> 261 : ", e);
         return;
       }
+    } else {
+      console.error("Error ==> 270 : failure to insert record");
+      return;
+    }
   } else {
     console.error("Error ==> 280 : ", JSON.stringify(response));
     return;
   }
 };
-async function redshiftBatchUpdate(records){
+async function redshiftBatchUpdate(records) {
   const client = new Client({
     database: process.env.DB_DATABASE,
     host: process.env.DB_HOST,
