@@ -15,11 +15,43 @@ exports.BatchJobHandler = async (event, context, callback) => {
             containerOverrides: {
                 environment: [
                     {
-                        "name": 'TARGET_TABLE',
+                        "name": 'PROJECT44_PAYLOAD_TABLE',
                         "value": process.env.PROJECT44_PAYLOAD_TABLE
                     },
                     {
-                        "name": 'REGION',
+                        "name" : 'PROJECT44_ENDPOINT',
+                        "value" : process.env.PROJECT44_ENDPOINT
+                    },
+                    {
+                        "name" : 'PROJECT44_USERNAME',
+                        "value" : process.env.PROJECT44_USERNAME
+                    },
+                    {
+                        "name" : 'PROJECT44_PASSWORD',
+                        "value" : process.env.PROJECT44_PASSWORD
+                    },
+                    {
+                        "name" : 'DB_DATABASE',
+                        "value" : process.env.DB_DATABASE
+                    },
+                    {
+                        "name" : 'DB_HOST',
+                        "value" : process.env.DB_HOST
+                    },
+                    {
+                        "name" : 'DB_PORT',
+                        "value" : process.env.DB_PORT
+                    },
+                    {
+                        "name" : 'DB_USER',
+                        "value" : process.env.DB_USER
+                    },
+                    {
+                        "name" : 'DB_PASSWORD',
+                        "value" : process.env.DB_PASSWORD
+                    },
+                    {
+                        "name": 'region',
                         "value": process.env.region
                     }
                 ]

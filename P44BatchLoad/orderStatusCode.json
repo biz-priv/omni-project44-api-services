@@ -1,0 +1,12 @@
+{
+      "NEW": "READY_FOR_PICKUP",
+      "APP": "UPDATED_PICKUP_APPT",
+      "PUP": "PICKED_UP",
+      "AAD": "ARRIVED_AT_TERMINAL",
+      "VER": "REWEIGHT_RECLASS",
+      "APD": "UPDATED_DELIVERY_APPT",
+      "TTC": "DEPARTED_TERMINAL",
+      "OFD": "OUT_FOR_DELIVERY",
+      "DEL": "DELIVERED",
+      "WEB": "NEW_WEB_SHIPMENT"
+}

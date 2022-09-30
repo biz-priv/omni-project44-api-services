@@ -1,45 +1,13 @@
-'use strict';
-
-// let _ = require("lodash");
-// const zlib = require('zlib');
-const AWS = require("aws-sdk");
-// const readline = require('readline');
-
-// AWS.config.update({ region: process.env.REGION });
-
-// const documentClient = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
-
-// const S3 = new AWS.S3();
-
-// const S3_BUCKET = process.env.S3_BUCKET;
-// const S3_BUCKET_PREFIX = process.env.S3_BUCKET_PREFIX;
-// const TABLE_NAME = process.env.TARGET_TABLE;
-
-// console.info("Batch worked");
-
 const { Client } = require("pg");
-// const Dynamo = require("../../shared/dynamo/db");
+const Dynamo = require("./shared/dynamo/db");
 // const PROJECT44_TABLE = process.env.PROJECT44_TABLE;
-// const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;
+const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;
 const moment = require("moment");
-// const validate = require("./validate");
+const validate = require("./validate");
 const rp = require("request-promise");
-// const authCanExecuteResource = require("serverless-offline/src/authCanExecuteResource");
-// const orderStatusCode = require("./orderStatusCode.json");
+const orderStatusCode = require("./orderStatusCode.json");
 
-function compare(otherArray) {
-  return function (current) {
-    return (
-      otherArray.filter(function (other) {
-        return (
-          other.file_nbr == current.file_nbr &&
-          other.order_status == current.order_status
-        );
-      }).length == 0
-    );
-  };
-}
-
+execHandler();
 async function recordInsert(keyData, jsonRecordObject) {
   try {
     const params = {
@@ -48,25 +16,13 @@ async function recordInsert(keyData, jsonRecordObject) {
         (key) => orderStatusCode[key] === keyData.order_status
       ),
       json_msg: JSON.stringify(jsonRecordObject),
+      project_44_response: keyData.project44Response
     };
     return await Dynamo.insertSingleRecord(PROJECT44_PAYLOAD_TABLE, params);
   } catch (error) {
     console.error("Error : ", error);
     return;
   }
-}
-
-function compareMatchRecord(otherArray) {
-  return function (current) {
-    return (
-      otherArray.filter(function (other) {
-        return (
-          other.file_nbr == current.file_nbr &&
-          other.order_status == current.order_status
-        );
-      }).length != 0
-    );
-  };
 }
 
 function sleep(ms) {
@@ -189,7 +145,6 @@ function sendNotification(element) {
         sourceType: "API",
       };
     }
-    await recordInsert(element, bodyData);
     var options = {
       method: "POST",
       uri: process.env.PROJECT44_ENDPOINT,
@@ -204,6 +159,7 @@ function sendNotification(element) {
     rp(options)
       .then(async (returnData) => {
         console.info(
+          "file_nbr : " + element.file_nbr,"order_status : " + element.order_status,"event_date : " + element.time_stamp,
           "Info : Notification sent successfully",
           returnData.statusCode
         );
@@ -211,31 +167,32 @@ function sendNotification(element) {
           httpStatusCode: returnData.statusCode,
           message: "success",
         });
+        await recordInsert(element, bodyData);
         resolve({ status: returnData.statusCode, Data: element });
       })
       .catch(async (err) => {
-        console.error("Error ==> 173 : ", err);
+        console.error( "file_nbr : " + element.file_nbr,"order_status : " + element.order_status,"event_date : " + element.time_stamp,"\nError ==> 173 : ", err);
         element["project44Response"] = JSON.stringify(err.error);
+        await recordInsert(element, bodyData);
         resolve({ status: "failure", Data: element });
       });
   });
 }
 
-execHandler();
 async function execHandler() {
-//   console.info("EVENT: ", JSON.stringify(event));
+  // console.info("EVENT: ", JSON.stringify(event));
   const client = new Client({
-    database: 'test_datamodel',
-    host: '10.9.130.79',
-    port: 5439,
-    user: 'bceuser1',
-    password: 'BizCloudExp1',
+    database: process.env.DB_DATABASE,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
   });
   let response, dynamoData;
   try {
     await client.connect();
     response = await client.query(
-      `select * from project44 where message_sent = '' LIMIT 3`
+      `select * from project44 where message_sent = '' limit 5`
     );
     console.info("Redshift response : ", JSON.stringify(response.rows));
     await client.end();
@@ -243,29 +200,22 @@ async function execHandler() {
     console.error("Error : ", error);
     return;
   }
-  return;
+
   if (response.rows.length) {
-    try {
-      dynamoData = await Dynamo.getAllScanRecord(PROJECT44_TABLE);
-    } catch (e) {
-      console.error("Scan Record Error ==> 207 : ", e);
-      return;
-    }
-    let notMatchedResult = response.rows.filter(compare(dynamoData));
-    let matchedRecord = dynamoData.filter(compareMatchRecord(response.rows));
-    if (notMatchedResult.length) {
+      let queryResponse = response.rows;
       console.info(
         "Info ==> 213 : Found unique records. Total Count : ",
-        notMatchedResult.length
+        queryResponse.length
       );
       let inputRecord = [];
       let promises = [];
-      for (let x in notMatchedResult) {
-        notMatchedResult[x]["time_stamp"] = moment().format(
+      for (let x in queryResponse) {
+        queryResponse[x]["event_date"] = moment(queryResponse[x]["event_date"]).format(
           `YYYY-MM-DDTHH:mm:ssZZ`
         );
+        queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"]
         await sleep(1000);
-        let validResult = await validate(notMatchedResult[x]);
+        let validResult = await validate(queryResponse[x]);
         if (!validResult.code) {
           validResult["order_status"] =
             orderStatusCode[validResult.order_status];
@@ -283,67 +233,55 @@ async function execHandler() {
           element.Data["order_status"] = Object.keys(orderStatusCode).find(
             (key) => orderStatusCode[key] === element.Data.order_status
           );
-          let insertRecord;
           if (element.status == 202) {
-            element.Data["notification_sent"] = "Y";
-            insertRecord = {
-              PutRequest: {
-                Item: element.Data,
-              },
-            };
-            inputRecord.push(insertRecord);
-          } else if (element.status == "failure") {
-            element.Data["notification_sent"] = "N";
-            insertRecord = {
-              PutRequest: {
-                Item: element.Data,
-              },
-            };
-            inputRecord.push(insertRecord);
+            inputRecord.push(element.Data.id);
           }
         });
       });
       if (inputRecord.length) {
         try {
-          let recordInsert = await arrayGroup(inputRecord);
-          for (let x in recordInsert) {
-            console.info(
-              "Insert New Record ==> 258 : ",
-              JSON.stringify(recordInsert)
-            );
-            await Dynamo.batchInsertRecord(PROJECT44_TABLE, recordInsert[x]);
-          }
+          let replacedData = JSON.stringify(inputRecord);
+          replacedData = replacedData.replace("[", "(")
+          replacedData = replacedData.replace("]", ")");
+          console.info("replacedData : ", replacedData);
+          await redshiftBatchUpdate(replacedData);
+          console.info("record processed successfully")
+          return "record processed successfully";
         } catch (e) {
-          console.error("Batch Insert Error ==> 261 : ", e);
-          return;
-        }
-        if (matchedRecord.length) {
-          console.info(
-            "Info ==> 266 : Matched Records Length : ",
-            matchedRecord.length
-          );
-          console.info(
-            "Info ==> 267 : Matched Records : ",
-            JSON.stringify(matchedRecord)
-          );
-          await updateRecord(matchedRecord);
+          console.error("Batch Update Error ==> 261 : ", e);
           return;
         }
       } else {
         console.error("Error ==> 270 : failure to insert record");
-        await updateRecord(matchedRecord);
         return;
       }
-    } else {
-      console.info("Info ==> 275 : ", matchedRecord);
-      await updateRecord(matchedRecord);
-      return;
-    }
   } else {
     console.error("Error ==> 280 : ", JSON.stringify(response));
     return;
   }
 };
+async function redshiftBatchUpdate(records){
+  const client = new Client({
+    database: process.env.DB_DATABASE,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+  });
+  let response
+  try {
+    await client.connect();
+    let execQuery = `update project44 set message_sent = 'Y' where id in ${records}`
+    console.info(execQuery);
+    response = await client.query(execQuery);
+    console.info("Redshift Record Update Response : ", JSON.stringify(response));
+    await client.end();
+    return response;
+  } catch (error) {
+    console.error("Error : ", error);
+    return;
+  }
+}
 
 async function arrayGroup(arrayRecord) {
   const chunkSize = 25;
@@ -356,40 +294,4 @@ async function arrayGroup(arrayRecord) {
       return e;
     });
   return groups;
-}
-
-async function updateRecord(arrayRecord) {
-  let promises = [];
-  const timestamp = moment().format(`YYYY-MM-DDTHH:mm:ssZZ`);
-  for (let x in arrayRecord) {
-    if (arrayRecord[x]["notification_sent"] == "N") {
-      arrayRecord[x]["time_stamp"] = timestamp;
-      await sleep(1000);
-      arrayRecord[x]["order_status"] =
-        orderStatusCode[arrayRecord[x]["order_status"]];
-      if (arrayRecord[x]["order_status"] != undefined) {
-        promises.push(sendNotification(arrayRecord[x]));
-      } else {
-        console.error("Error ==> 306 : ", JSON.stringify(arrayRecord[x]));
-      }
-    }
-  }
-  await Promise.all(promises).then(async (records) => {
-    for (let x in records) {
-      if (records[x].status == 202) {
-        records[x].Data["order_status"] = Object.keys(orderStatusCode).find(
-          (key) => orderStatusCode[key] === records[x].Data.order_status
-        );
-        await Dynamo.updateItems(
-          PROJECT44_TABLE,
-          {
-            file_nbr: records[x].Data.file_nbr,
-            order_status: records[x].Data.order_status,
-          },
-          "set notification_sent = :x, time_stamp = :time",
-          { ":x": "Y", ":time": timestamp }
-        );
-      }
-    }
-  });
 }
