@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const get = require('lodash.get');
 const PROJECT44_TABLE = process.env.PROJECT44_TABLE;
+const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;
 const { handleError } = require('../utils/responses');
 
 /* update record */
@@ -67,11 +68,11 @@ async function getAllScanRecord(tableName) {
 }
 
 /* batch insert record */
-async function batchInsertRecord(tableName, records) {
+async function batchInsertRecord(records) {
     const documentClient = new AWS.DynamoDB.DocumentClient({ region: process.env.DEFAULT_AWS });
     const params = {
         RequestItems: {
-            [PROJECT44_TABLE] : records
+            [PROJECT44_PAYLOAD_TABLE] : records
         }
     };
     try {

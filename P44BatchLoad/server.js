@@ -7,23 +7,6 @@ const rp = require("request-promise");
 const orderStatusCode = require("./orderStatusCode.json");
 
 execHandler();
-async function recordInsert(keyData, jsonRecordObject) {
-  try {
-    const params = {
-      file_nbr: keyData.file_nbr,
-      order_status: Object.keys(orderStatusCode).find(
-        (key) => orderStatusCode[key] === keyData.order_status
-      ),
-      json_msg: JSON.stringify(jsonRecordObject),
-      project_44_response: keyData.project44Response
-    };
-    return await Dynamo.insertSingleRecord(PROJECT44_PAYLOAD_TABLE, params);
-  } catch (error) {
-    console.error("Error : ", error);
-    return;
-  }
-}
-
 function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -158,7 +141,9 @@ function sendNotification(element) {
     rp(options)
       .then(async (returnData) => {
         console.info(
-          "file_nbr : " + element.file_nbr, "order_status : " + element.order_status, "event_date : " + element.time_stamp,
+          "file_nbr : " + element.file_nbr,
+          "order_status : " + element.order_status,
+          "event_date : " + element.time_stamp,
           "Info : Notification sent successfully",
           returnData.statusCode
         );
@@ -166,13 +151,21 @@ function sendNotification(element) {
           httpStatusCode: returnData.statusCode,
           message: "success",
         });
-        await recordInsert(element, bodyData);
+        element["json_record_object"] = JSON.stringify(bodyData);
         resolve({ status: returnData.statusCode, Data: element });
       })
       .catch(async (err) => {
-        console.error("file_nbr : " + element.file_nbr, "order_status : " + element.order_status, "event_date : " + element.time_stamp, "\nError ==> 173 : ", err);
-        element["project44Response"] = JSON.stringify(err.error);
-        await recordInsert(element, bodyData);
+        console.error(
+          "file_nbr : " + element.file_nbr,
+          "order_status : " + element.order_status,
+          "event_date : " + element.time_stamp,
+          "\nError ==> 173 : ",
+          err
+        );
+        element["project44Response"] = JSON.stringify({
+          error: err.error,
+        });
+        element["json_record_object"] = JSON.stringify(bodyData);
         resolve({ status: "failure", Data: element });
       });
   });
@@ -206,6 +199,9 @@ async function execHandler() {
       queryResponse.length
     );
     let inputRecord = [];
+    let allSuccessRecords = [];
+    let allFailedRecords = [];
+    let dynamodbPayload;
     let promises = [];
     for (let x in queryResponse) {
       console.log("event_date", queryResponse[x]["event_date"])
@@ -214,8 +210,7 @@ async function execHandler() {
       await sleep(1000);
       let validResult = await validate(queryResponse[x]);
       if (!validResult.code) {
-        validResult["order_status"] =
-          orderStatusCode[validResult.order_status];
+        validResult["order_status"] = orderStatusCode[validResult.order_status];
         if (validResult["order_status"] != undefined) {
           promises.push(sendNotification(validResult));
         } else {
@@ -232,27 +227,76 @@ async function execHandler() {
         );
         if (element.status == 202) {
           inputRecord.push(element.Data.id);
+          dynamodbPayload = {
+            PutRequest: {
+              Item: {
+                file_nbr: element.Data.file_nbr,
+                order_status: element.Data["order_status"],
+                json_msg: element.Data.json_record_object,
+                project_44_response: element.Data.project44Response,
+              },
+            },
+          };
+          allSuccessRecords.push(dynamodbPayload);
+        } else if (element.status == "failure") {
+          dynamodbPayload = {
+            PutRequest: {
+              Item: {
+                file_nbr: element.Data.file_nbr,
+                order_status: element.Data["order_status"],
+                json_msg: element.Data.json_record_object,
+                project_44_response: element.Data.project44Response,
+              },
+            },
+          };
+          allFailedRecords.push(dynamodbPayload);
         }
       });
     });
     if (inputRecord.length) {
       try {
-        let replacedData = JSON.stringify(inputRecord);
-        replacedData = replacedData.replace("[", "(")
-        replacedData = replacedData.replace("]", ")");
-        replacedData = replacedData.replace(/"/gi, "'");
-        console.info("replacedData : ", replacedData);
-        await redshiftBatchUpdate(replacedData);
-        console.info("record processed successfully")
-        return "record processed successfully";
+        let redshiftRecords = await arrayGroup(inputRecord);
+        let dynamodbRecord = await arrayGroup(allSuccessRecords);
+        for (let x in dynamodbRecord) {
+          console.info(
+            "Insert New Record in dynamoDB ==> 258 : ",
+            JSON.stringify(dynamodbRecord)
+          );
+          let replacedData = JSON.stringify(redshiftRecords[x]);
+          replacedData = replacedData.replace("[", "(");
+          replacedData = replacedData.replace("]", ")");
+          replacedData = replacedData.replace(/"/gi, "'");
+          await redshiftBatchUpdate(replacedData);
+          console.info("Records updated in redshift: ", replacedData);
+          await Dynamo.batchInsertRecord(dynamodbRecord[x]);
+          console.info("Success records inserted in dynamoDB: ", dynamodbRecord[x]);
+        }
       } catch (e) {
-        console.error("Batch Update Error ==> 261 : ", e);
+        console.error(
+          "DynamoDB and Redshift Batch insert-update Error ==> 262 : ",
+          e
+        );
+        return;
+      }
+    } else if (allFailedRecords.length) {
+      try {
+        let recordInsert = await arrayGroup(allFailedRecords);
+        for (let x in recordInsert) {
+          console.info(
+            "Insert Failed Record in dynamoDB==> 259 : ",
+            JSON.stringify(recordInsert)
+          );
+          await Dynamo.batchInsertRecord(recordInsert[x]);
+          console.info("Failed records inserted in dynamodb: ", recordInsert[x]);
+        }
+      } catch (e) {
+        console.error("Dynamo Batch Insert Error ==> 261 : ", e);
         return;
       }
     } else {
       console.error("Error ==> 270 : failure to insert record");
-      return;
     }
+    return;
   } else {
     console.error("Error ==> 280 : ", JSON.stringify(response));
     return;
@@ -266,13 +310,16 @@ async function redshiftBatchUpdate(records) {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
   });
-  let response
+  let response;
   try {
     await client.connect();
-    let execQuery = `update project44 set message_sent = 'Y' where id in ${records}`
+    let execQuery = `update project44 set message_sent = 'Y' where id in ${records}`;
     console.info(execQuery);
     response = await client.query(execQuery);
-    console.info("Redshift Record Update Response : ", JSON.stringify(response));
+    console.info(
+      "Redshift Record Update Response : ",
+      JSON.stringify(response)
+    );
     await client.end();
     return response;
   } catch (error) {

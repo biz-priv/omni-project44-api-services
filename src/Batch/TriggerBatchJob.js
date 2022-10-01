@@ -58,9 +58,19 @@ exports.BatchJobHandler = async (event, context, callback) => {
             }
         };
 
-        const batchData = await submitBatchJob(params);
-
-        console.info("batchData", batchData);
+        let jobQuesName = process.env.JOB_QUEUE
+        let jobStatusName = ["RUNNING","SUBMITTED","PENDING","RUNNABLE","STARTING"]
+        let jobDetails = [];
+        for (let x in jobStatusName) {
+            let result = await checkJobStatus(jobStatusName[x], jobQuesName);
+            if(result.length){
+                jobDetails.push(result.jobSummaryList);
+            }
+        }
+        console.info("jobStatus length : ", jobDetails.length);
+        if(!jobDetails.length){
+            const batchData = await submitBatchJob(params);
+            console.info("batchData", batchData);
 
         const response = {
             statusCode: 200,
@@ -68,6 +78,14 @@ exports.BatchJobHandler = async (event, context, callback) => {
         };
 
         return callback(null, response);
+        }else {
+        const response = {
+            statusCode: 400,
+            body: JSON.stringify({ message: `Job is already in processing` }),
+        };
+
+        return callback(null, response);
+        }
 
     } catch (error) {
         console.error("Error while processing data", error);
@@ -94,3 +112,21 @@ async function submitBatchJob(params) {
         });
     })
 }
+
+async function checkJobStatus(jobStatus, jobQueueName){
+    var params = {
+      jobQueue: jobQueueName,
+      jobStatus: jobStatus
+     };
+    return new Promise(async (resolve, reject) => {
+      batch.listJobs(params, function (err, data) {
+          if (err) {
+              console.error(err, err.stack);
+              return reject(err);
+          } else {
+              console.info(data);
+              return resolve(data.jobSummaryList);
+          }
+      });
+  })
+  }
