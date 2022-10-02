@@ -205,7 +205,7 @@ async function execHandler() {
     let promises = [];
     for (let x in queryResponse) {
       console.log("event_date", queryResponse[x]["event_date"])
-      queryResponse[x]["event_date"] = (((queryResponse[x]["event_date"]).toISOString()).substring(0, 19)) + "-05:00";
+      queryResponse[x]["event_date"] = (((queryResponse[x]["event_date"]).toISOString()).substring(0, 19)) + "-0500";
       queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"];
       await sleep(1000);
       let validResult = await validate(queryResponse[x]);

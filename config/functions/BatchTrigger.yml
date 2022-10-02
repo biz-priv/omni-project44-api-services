@@ -24,8 +24,8 @@
       PROJECT44_ENDPOINT: ${ssm:/omni-project44-api-services/${self:provider.stage}/url}
       PROJECT44_USERNAME: ${ssm:/omni-project44-api-services/${self:provider.stage}/auth/username}
       PROJECT44_PASSWORD: ${ssm:/omni-project44-api-services/${self:provider.stage}/auth/password}
-    # events:
-    #   - schedule: rate(60 minutes)
+    events:
+      - schedule: rate(60 minutes)
     iamRoleStatementsName: omni-dw-project44-batch-trigger-${self:provider.stage}-role
     iamRoleStatements:
       -
