@@ -127,6 +127,14 @@ function sendNotification(element) {
         sourceType: "API",
       };
     }
+    if(element.order_status == "UPDATED_DELIVERY_APPT"){
+      let startDateTime = (((element.schd_delv_start).toISOString()).substring(0, 19)) + "-0500";
+      let endDateTime = (((element.schd_delv_end).toISOString()).substring(0, 19)) + "-0500";
+      bodyData["deliveryAppointmentWindow"] = {
+        "startDateTime" : startDateTime,
+        "endDateTime" : endDateTime 
+      }
+    }
     var options = {
       method: "POST",
       uri: process.env.PROJECT44_ENDPOINT,
