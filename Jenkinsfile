@@ -18,13 +18,11 @@ pipeline {
             }
         }
 
+        // TODO - bicloud Jenkins needs Docker Installed. Using Branch convention "Docker to not trigger this stage"
         stage('ECR Deploy'){
             when {
                 anyOf {
-                    branch 'feature/*';
-                    branch 'bugfix/*'
-                    branch 'develop';
-                    branch 'master'
+                    branch 'Docker/*';
                 }
                 expression {
                     return true;
@@ -46,6 +44,7 @@ pipeline {
                 }
             }
         }
+
         stage('Omni Deploy'){
             when {
                 anyOf {
