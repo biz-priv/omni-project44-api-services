@@ -18,6 +18,34 @@ pipeline {
             }
         }
 
+        stage('ECR Deploy'){
+            when {
+                anyOf {
+                    branch 'feature/*';
+                    branch 'bugfix/*'
+                    branch 'develop';
+                    branch 'master'
+                }
+                expression {
+                    return true;
+                }
+            }
+            steps {
+                script{
+                    if(fileExists("P44BatchLoad/Dockerfile")){
+                        dir("./P44BatchLoad"){
+                            withAWS(credentials: 'omni-aws-creds'){
+                                sh """ 
+                                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 332281781429.dkr.ecr.us-east-1.amazonaws.com
+                                docker build --platform linux/amd64 -t omni-dw-project44-batch-${env.ENVIRONMENT}:1 .
+                                docker push 332281781429.dkr.ecr.us-east-1.amazonaws.com/omni-dw-project44-batch-${env.ENVIRONMENT}:1
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+        }
         stage('Omni Deploy'){
             when {
                 anyOf {
