@@ -20,17 +20,6 @@ pipeline {
 
         // TODO - bicloud Jenkins needs Docker Installed.
         stage('ECR Deploy'){
-            when {
-                anyOf {
-                    branch 'feature/*';
-                    branch 'bugfix/*'
-                    branch 'develop';
-                    branch 'master'
-                }
-                expression {
-                    return true;
-                }
-            }
             steps {
                 script{
                     if(fileExists("P44BatchLoad/Dockerfile")){
