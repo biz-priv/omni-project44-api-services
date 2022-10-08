@@ -37,7 +37,7 @@ pipeline {
                         dir("./P44BatchLoad"){
                             withAWS(credentials: 'omni-aws-creds'){
                                 sh """
-                                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 332281781429.dkr.ecr.us-east-1.amazonaws.com
+                                docker login -u AWS https://332281781429.dkr.ecr.us-east-1.amazonaws.com -p $(aws ecr get-login-password --region us-east-1)
                                 docker build --platform linux/amd64 -t omni-dw-project44-batch-${env.ENVIRONMENT} .
                                 docker tag omni-dw-project44-batch-${env.ENVIRONMENT}:latest 332281781429.dkr.ecr.us-east-1.amazonaws.com/omni-dw-project44-batch-${env.ENVIRONMENT}:latest
                                 docker push 332281781429.dkr.ecr.us-east-1.amazonaws.com/omni-dw-project44-batch-${env.ENVIRONMENT}:latest
