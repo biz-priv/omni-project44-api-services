@@ -36,7 +36,8 @@ pipeline {
                     if(fileExists("P44BatchLoad/Dockerfile")){
                         dir("./P44BatchLoad"){
                             withAWS(credentials: 'omni-aws-creds'){
-                                sh """ 
+                                sh """
+                                systemctl restart docker 
                                 service docker status
                                 service docker start
                                 sleep 1000
