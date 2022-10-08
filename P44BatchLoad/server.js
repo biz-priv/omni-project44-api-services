@@ -127,12 +127,12 @@ function sendNotification(element) {
         sourceType: "API",
       };
     }
-    if(element.order_status == "UPDATED_DELIVERY_APPT"){
+    if (element.order_status == "UPDATED_DELIVERY_APPT") {
       let startDateTime = (((element.schd_delv_start).toISOString()).substring(0, 19)) + "-0500";
       let endDateTime = (((element.schd_delv_end).toISOString()).substring(0, 19)) + "-0500";
       bodyData["deliveryAppointmentWindow"] = {
-        "startDateTime" : startDateTime,
-        "endDateTime" : endDateTime 
+        "startDateTime": startDateTime,
+        "endDateTime": endDateTime
       }
     }
     var options = {
@@ -193,7 +193,6 @@ async function execHandler() {
     response = await client.query(
       `select * from project44 where message_sent = '' order by file_nbr, event_date`
     );
-    console.info("Redshift response : ", JSON.stringify(response.rows));
     await client.end();
   } catch (error) {
     console.error("Error : ", error);
@@ -233,6 +232,7 @@ async function execHandler() {
         element.Data["order_status"] = Object.keys(orderStatusCode).find(
           (key) => orderStatusCode[key] === element.Data.order_status
         );
+
         if (element.status == 202) {
           inputRecord.push(element.Data.id);
           dynamodbPayload = {
@@ -242,6 +242,7 @@ async function execHandler() {
                 order_status: element.Data["order_status"],
                 json_msg: element.Data.json_record_object,
                 project_44_response: element.Data.project44Response,
+                time_stamp: await currentDate()
               },
             },
           };
@@ -254,6 +255,7 @@ async function execHandler() {
                 order_status: element.Data["order_status"],
                 json_msg: element.Data.json_record_object,
                 project_44_response: element.Data.project44Response,
+                time_stamp: await currentDate()
               },
             },
           };
@@ -266,10 +268,6 @@ async function execHandler() {
         let redshiftRecords = await arrayGroup(inputRecord);
         let dynamodbRecord = await arrayGroup(allSuccessRecords);
         for (let x in dynamodbRecord) {
-          console.info(
-            "Insert New Record in dynamoDB ==> 258 : ",
-            JSON.stringify(dynamodbRecord)
-          );
           let replacedData = JSON.stringify(redshiftRecords[x]);
           replacedData = replacedData.replace("[", "(");
           replacedData = replacedData.replace("]", ")");
@@ -322,7 +320,6 @@ async function redshiftBatchUpdate(records) {
   try {
     await client.connect();
     let execQuery = `update project44 set message_sent = 'Y' where id in ${records}`;
-    console.info(execQuery);
     response = await client.query(execQuery);
     console.info(
       "Redshift Record Update Response : ",
@@ -347,4 +344,12 @@ async function arrayGroup(arrayRecord) {
       return e;
     });
   return groups;
+}
+
+async function currentDate() {
+  const date = new Date();
+  const CSToffSet = -300; //CST is -5:00 of UTC; i.e. 60*5 = -300 in minutes 
+  offset = CSToffSet * 60 * 1000;
+  const CSTTime = String(new Date(date.getTime() + offset));
+  return CSTTime;
 }
