@@ -211,7 +211,7 @@ async function execHandler() {
     let dynamodbPayload;
     let promises = [];
     for (let x in queryResponse) {
-      console.log("event_date", queryResponse[x]["event_date"])
+      // console.log("event_date", queryResponse[x]["event_date"])
       queryResponse[x]["event_date"] = (((queryResponse[x]["event_date"]).toISOString()).substring(0, 19)) + "-0500";
       queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"];
       await sleep(1000);
