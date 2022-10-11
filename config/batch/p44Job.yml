@@ -75,7 +75,7 @@ P44JobDefinition:
           awslogs-stream-prefix: omni-dw-project44-batch-logs
       ExecutionRoleArn: !GetAtt 'P44JobBatchTaskExecutionRole.Arn'
       JobRoleArn: !GetAtt 'P44JobBatchTaskExecutionRole.Arn'
-      Image: 332281781429.dkr.ecr.us-east-1.amazonaws.com/omni-dw-project44-batch-${self:provider.stage}:1
+      Image: 332281781429.dkr.ecr.us-east-1.amazonaws.com/omni-dw-project44-batch-${self:provider.stage}:latest
       NetworkConfiguration:
         AssignPublicIp: ENABLED
 
