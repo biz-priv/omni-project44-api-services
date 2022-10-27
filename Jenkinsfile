@@ -57,7 +57,6 @@ pipeline {
                     branch 'feature/*';
                     branch 'bugfix/*'
                     branch 'develop';
-                    branch 'master'
                 }
                 expression {
                     return true;
@@ -72,6 +71,7 @@ pipeline {
                     npm i
                     cd ../..
                     serverless --version
+                    sls deploy -s ${env.ENVIRONMENT}
                     """
                 }
             }
