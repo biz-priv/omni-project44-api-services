@@ -1,0 +1,37 @@
+---
+  function:
+    name:  omni-dw-project44-batch-trigger-${self:provider.stage}
+    handler: src/Batch/TriggerBatchJob.BatchJobHandler
+    memorySize: 256
+    timeout: 60
+    layers:
+      - { Ref: CommonP44LibsLambdaLayer }
+    package:
+      patterns:
+        - '!**/*'
+        - 'src/Batch/TriggerBatchJob.js'
+    environment:
+      P44_BATCH_JOB_DEFINITION: !Ref P44JobDefinition
+      P44_BATCH_JOB_NAME:  omni-dw-project44-batch-job-${self:provider.stage}
+      JOB_QUEUE: !Ref OmniJobQueue
+      DB_PORT: ${ssm:/omni-dw/${self:provider.stage}/db/port}
+      DB_HOST: ${ssm:/omni-dw/${self:provider.stage}/db/host~true}
+      DB_PASSWORD: ${ssm:/omni-dw/${self:provider.stage}/db/password~true}
+      DB_DATABASE: ${ssm:/omni-dw/${self:provider.stage}/db/name}
+      DB_USER: ${ssm:/omni-dw/${self:provider.stage}/db/user~true}
+      PROJECT44_TABLE: ${ssm:/omni-dw/${self:provider.stage}/project44/table}
+      PROJECT44_PAYLOAD_TABLE: ${ssm:/omni-dw/${self:provider.stage}/project44/table/payload}
+      PROJECT44_ENDPOINT: ${ssm:/omni-project44-api-services/${self:provider.stage}/url}
+      PROJECT44_USERNAME: ${ssm:/omni-project44-api-services/${self:provider.stage}/auth/username}
+      PROJECT44_PASSWORD: ${ssm:/omni-project44-api-services/${self:provider.stage}/auth/password}
+    events:
+      - schedule: rate(60 minutes)
+    iamRoleStatementsName: omni-dw-project44-batch-trigger-${self:provider.stage}-role
+    iamRoleStatements:
+      -
+        Effect: "Allow"
+        Action:
+        - "batch:Describe*"
+        - "batch:List*"
+        - "batch:SubmitJob"
+        Resource: "*"
