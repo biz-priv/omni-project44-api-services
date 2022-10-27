@@ -12,7 +12,7 @@ pipeline {
                         env.ENVIRONMENT=env.getProperty("environment_prod")
                     }
                     sh """
-                    echo "Environment: "${env.ENVIRONMENT}"
+                    echo "Environment: "${env.ENVIRONMENT}
                     """
                 }
             }
