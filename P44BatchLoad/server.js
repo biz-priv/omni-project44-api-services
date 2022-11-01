@@ -228,6 +228,106 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
+    } else if (element.region_code_basis != "C" || element.region_code_basis != "S" && accountIdentifier == "MCKESSON") {
+      bodyData = {
+        customerAccount: {
+          accountIdentifier,
+        },
+        carrierIdentifier: {
+          type: "SCAC",
+          value: "OMNG",
+        },
+        shipmentIdentifiers: [
+          {
+            type: "BILL_OF_LADING",
+            value: element.ref_nbr,
+            primaryForType: true,
+            source: "CUSTOMER",
+          },
+          {
+            type: "PRO",
+            value: element.house_bill_nbr,
+            primaryForType: true,
+            source: "CAPACITY_PROVIDER",
+          },
+        ],
+        statusCode: element.order_status,
+        terminalCode: element.origin_port_iata,
+        stopType: "ORIGIN",
+        stopNumber: 0,
+        location: {
+          address: {
+            postalCode: element.shipper_zip,
+            addressLines: [element.shipper_addr_1],
+            city: element.shipper_city,
+            state: element.shipper_st,
+            country: element.shipper_cntry,
+          },
+          contact: {
+            companyName: null,
+            contactName: null,
+            phoneNumber: null,
+            phoneNumberCountryCode: null,
+            phoneNumber2: null,
+            phoneNumber2CountryCode: null,
+            email: null,
+            faxNumber: null,
+            faxNumberCountryCode: null,
+          },
+        },
+        timestamp: element.time_stamp,
+        sourceType: "API",
+      };
+    } else if (element.region_code_basis != "C" || element.region_code_basis != "S" && accountIdentifier != "MCKESSON") {
+      bodyData = {
+        customerAccount: {
+          accountIdentifier,
+        },
+        carrierIdentifier: {
+          type: "SCAC",
+          value: "OMNG",
+        },
+        shipmentIdentifiers: [
+          {
+            type: "PURCHASE_ORDER",
+            value: element.ref_nbr,
+            primaryForType: true,
+            source: "CUSTOMER",
+          },
+          {
+            type: "PRO",
+            value: element.house_bill_nbr,
+            primaryForType: true,
+            source: "CAPACITY_PROVIDER",
+          },
+        ],
+        statusCode: element.order_status,
+        terminalCode: element.origin_port_iata,
+        stopType: "ORIGIN",
+        stopNumber: 0,
+        location: {
+          address: {
+            postalCode: element.shipper_zip,
+            addressLines: [element.shipper_addr_1],
+            city: element.shipper_city,
+            state: element.shipper_st,
+            country: element.shipper_cntry,
+          },
+          contact: {
+            companyName: null,
+            contactName: null,
+            phoneNumber: null,
+            phoneNumberCountryCode: null,
+            phoneNumber2: null,
+            phoneNumber2CountryCode: null,
+            email: null,
+            faxNumber: null,
+            faxNumberCountryCode: null,
+          },
+        },
+        timestamp: element.time_stamp,
+        sourceType: "API",
+      };
     }
     if (element.order_status == "UPDATED_DELIVERY_APPT") {
       let startDateTime = (((element.schd_delv_start).toISOString()).substring(0, 19)) + "-0500";
