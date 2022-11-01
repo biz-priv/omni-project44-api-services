@@ -28,7 +28,7 @@ function sendNotification(element) {
   return new Promise(async (resolve, reject) => {
     let bodyData;
     const accountIdentifier = checkAccount(element.bill_to_nbr);
-    if (element.region_code_basis == "S" && accountIdentifier == "OVERSTOCK" || accountIdentifier == "TECHNICOLOR") {
+    if (element.region_code_basis == "S" && accountIdentifier != "MCKESSON") {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -78,7 +78,7 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
-    } else if (element.region_code_basis == "C" && accountIdentifier == "OVERSTOCK" || accountIdentifier == "TECHNICOLOR") {
+    } else if (element.region_code_basis == "C" && accountIdentifier != "MCKESSON") {
       bodyData = {
         customerAccount: {
           accountIdentifier,
