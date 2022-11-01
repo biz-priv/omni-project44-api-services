@@ -18,7 +18,8 @@ function checkAccount(param) {
     11912: "OVERSTOCK",
     22209: "MCKESSON",
     21719: "MCKESSON",
-    22210: "MCKESSON"
+    22210: "MCKESSON",
+    9575: "TECHNICOLOR"
   };
   return data[param];
 }
@@ -27,7 +28,7 @@ function sendNotification(element) {
   return new Promise(async (resolve, reject) => {
     let bodyData;
     const accountIdentifier = checkAccount(element.bill_to_nbr);
-    if (element.region_code_basis == "S") {
+    if (element.region_code_basis == "S" && accountIdentifier == "OVERSTOCK" || accountIdentifier == "TECHNICOLOR") {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -77,7 +78,7 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
-    } else if (element.region_code_basis == "C") {
+    } else if (element.region_code_basis == "C" && accountIdentifier == "OVERSTOCK" || accountIdentifier == "TECHNICOLOR") {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -89,6 +90,106 @@ function sendNotification(element) {
         shipmentIdentifiers: [
           {
             type: "PURCHASE_ORDER",
+            value: element.ref_nbr,
+            primaryForType: true,
+            source: "CUSTOMER",
+          },
+          {
+            type: "PRO",
+            value: element.house_bill_nbr,
+            primaryForType: true,
+            source: "CAPACITY_PROVIDER",
+          },
+        ],
+        statusCode: element.order_status,
+        terminalCode: element.destination_port_iata,
+        stopType: "DESTINATION",
+        stopNumber: 1,
+        location: {
+          address: {
+            postalCode: element.consignee_zip,
+            addressLines: [element.consignee_addr_1],
+            city: element.consignee_city,
+            state: element.consignee_st,
+            country: element.consignee_cntry,
+          },
+          contact: {
+            companyName: null,
+            contactName: element.consignee_name,
+            phoneNumber: null,
+            phoneNumberCountryCode: null,
+            phoneNumber2: null,
+            phoneNumber2CountryCode: null,
+            email: null,
+            faxNumber: null,
+            faxNumberCountryCode: null,
+          },
+        },
+        timestamp: element.time_stamp,
+        sourceType: "API",
+      };
+    } else if (element.region_code_basis == "S" && accountIdentifier == "MCKESSON") {
+      bodyData = {
+        customerAccount: {
+          accountIdentifier,
+        },
+        carrierIdentifier: {
+          type: "SCAC",
+          value: "OMNG",
+        },
+        shipmentIdentifiers: [
+          {
+            type: "BILL_OF_LADING",
+            value: element.ref_nbr,
+            primaryForType: true,
+            source: "CUSTOMER",
+          },
+          {
+            type: "PRO",
+            value: element.house_bill_nbr,
+            primaryForType: true,
+            source: "CAPACITY_PROVIDER",
+          },
+        ],
+        statusCode: element.order_status,
+        terminalCode: element.origin_port_iata,
+        stopType: "ORIGIN",
+        stopNumber: 0,
+        location: {
+          address: {
+            postalCode: element.shipper_zip,
+            addressLines: [element.shipper_addr_1],
+            city: element.shipper_city,
+            state: element.shipper_st,
+            country: element.shipper_cntry,
+          },
+          contact: {
+            companyName: null,
+            contactName: null,
+            phoneNumber: null,
+            phoneNumberCountryCode: null,
+            phoneNumber2: null,
+            phoneNumber2CountryCode: null,
+            email: null,
+            faxNumber: null,
+            faxNumberCountryCode: null,
+          },
+        },
+        timestamp: element.time_stamp,
+        sourceType: "API",
+      };
+    } else if (element.region_code_basis == "C" && accountIdentifier == "MCKESSON") {
+      bodyData = {
+        customerAccount: {
+          accountIdentifier,
+        },
+        carrierIdentifier: {
+          type: "SCAC",
+          value: "OMNG",
+        },
+        shipmentIdentifiers: [
+          {
+            type: "BILL_OF_LADING",
             value: element.ref_nbr,
             primaryForType: true,
             source: "CUSTOMER",
