@@ -460,7 +460,11 @@ async function execHandler() {
                 order_status: element.Data["order_status"],
                 json_msg: element.Data.json_record_object,
                 project_44_response: element.Data.project44Response,
-                time_stamp: await currentDate()
+                // time_stamp: await currentDate()
+                time_stamp: moment
+                  .tz("America/Chicago")
+                  .format("YYYY:MM:DD HH:mm:ss")
+                  .toString()
               },
             },
           };
@@ -549,12 +553,4 @@ async function arrayGroup(arrayRecord) {
       return e;
     });
   return groups;
-}
-
-async function currentDate() {
-  const date = new Date();
-  const CSToffSet = -300; //CST is -5:00 of UTC; i.e. 60*5 = -300 in minutes 
-  offset = CSToffSet * 60 * 1000;
-  const CSTTime = String(new Date(date.getTime() + offset));
-  return CSTTime;
 }
