@@ -444,7 +444,10 @@ async function execHandler() {
                 order_status: element.Data["order_status"],
                 json_msg: element.Data.json_record_object,
                 project_44_response: element.Data.project44Response,
-                time_stamp: await currentDate()
+                time_stamp: moment
+                  .tz("America/Chicago")
+                  .format("YYYY:MM:DD HH:mm:ss")
+                  .toString()
               },
             },
           };
