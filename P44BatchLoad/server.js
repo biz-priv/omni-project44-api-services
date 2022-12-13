@@ -453,6 +453,10 @@ async function execHandler() {
           };
           allSuccessRecords.push(dynamodbPayload);
         } else if (element.status == "failure") {
+          console.error(
+            "Send Notification Error ==> 281 : ",
+            JSON.stringify(element.Data.project44Response)
+          );
           dynamodbPayload = {
             PutRequest: {
               Item: {
