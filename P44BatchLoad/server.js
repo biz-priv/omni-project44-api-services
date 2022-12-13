@@ -1,7 +1,7 @@
 const { Client } = require("pg");
 const Dynamo = require("./shared/dynamo/db");
 const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;
-const moment = require("moment");
+const moment = require("moment-timezone");
 const validate = require("./validate");
 const rp = require("request-promise");
 const orderStatusCode = require("./orderStatusCode.json");
@@ -365,13 +365,15 @@ function sendNotification(element) {
         resolve({ status: returnData.statusCode, Data: element });
       })
       .catch(async (err) => {
-        console.error(
-          "file_nbr : " + element.file_nbr,
-          "order_status : " + element.order_status,
-          "event_date : " + element.time_stamp,
-          "\nError ==> 173 : ",
-          err
-        );
+        // TODO - Remove comments later
+
+        // console.error(
+        //   "file_nbr : " + element.file_nbr,
+        //   "order_status : " + element.order_status,
+        //   "event_date : " + element.time_stamp,
+        //   "\nError ==> 173 : ",
+        //   err
+        // );
         element["project44Response"] = JSON.stringify({
           error: err.error,
         });
@@ -412,11 +414,21 @@ async function execHandler() {
     let allFailedRecords = [];
     let dynamodbPayload;
     let promises = [];
+
+    var index_x = 0;
+
+    // Info - Change 3 by Abhishek - Updates for loop
     for (let x in queryResponse) {
+    // for (let index = 0; index < result.length; index++) {
+      console.info(
+        "Info ==> 282 : Loop Counter: ",
+        index_x
+      );
       // console.log("event_date", queryResponse[x]["event_date"])
       queryResponse[x]["event_date"] = (((queryResponse[x]["event_date"]).toISOString()).substring(0, 19)) + "-0500";
       queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"];
-      await sleep(1000);
+      // Info - Change 5 by Abhishek - Removed sleep
+      // await sleep(1000);
       let validResult = await validate(queryResponse[x]);
       if (!validResult.code) {
         validResult["order_status"] = orderStatusCode[validResult.order_status];
@@ -428,9 +440,20 @@ async function execHandler() {
       } else {
         console.error("Error ==> 228 : ", JSON.stringify(validResult));
       }
+      index_x += 1;
     }
-    await Promise.all(promises).then((result) => {
-      result.map(async (element) => {
+
+    // Info - Change 1 by Abhishek - removed then from promise
+    // Info - Change 2 by Abhishek - Added for loop instead of array.map and added log for loop counter
+    var result = await Promise.all(promises)
+    for (let index = 0; index < result.length; index++) {
+        console.info(
+          "Info ==> 282 : Loop Counter for Promise.all : ",
+          index
+        );
+
+        const element = result[index];
+
         element.Data["order_status"] = Object.keys(orderStatusCode).find(
           (key) => orderStatusCode[key] === element.Data.order_status
         );
@@ -474,8 +497,8 @@ async function execHandler() {
           };
           allFailedRecords.push(dynamodbPayload);
         }
-      });
-    });
+      }
+
     if (inputRecord.length) {
       try {
         let redshiftRecords = await arrayGroup(inputRecord);
@@ -500,13 +523,23 @@ async function execHandler() {
     } else if (allFailedRecords.length) {
       try {
         let recordInsert = await arrayGroup(allFailedRecords);
+        console.info(
+          "Info ==> 283 : Number of array groups: ",
+          recordInsert.length
+        );
+        index_x = 0;
+        // Info - Change 4 by Abhishek - log in loop
         for (let x in recordInsert) {
           console.info(
             "Insert Failed Record in dynamoDB==> 259 : ",
             JSON.stringify(recordInsert)
           );
+          console.info(
+            `Info ==> 282 : Loop Counter for batch insert in dynamoDB: ${index_x}`,
+          );
           await Dynamo.batchInsertRecord(recordInsert[x]);
           console.info("Failed records inserted in dynamodb: ", recordInsert[x]);
+          index_x+=1;
         }
       } catch (e) {
         console.error("Dynamo Batch Insert Error ==> 261 : ", e);
@@ -532,7 +565,7 @@ async function redshiftBatchUpdate(records) {
   let response;
   try {
     await client.connect();
-    let execQuery = `update project44 set message_sent = 'Y' where id in ${records}`;
+    let execQuery = `update project44 set message_sent = 'F' where id in ${records}`;
     response = await client.query(execQuery);
     console.info(
       "Redshift Record Update Response : ",
