@@ -330,13 +330,21 @@ function sendNotification(element) {
       };
     }
     if (element.order_status == "UPDATED_DELIVERY_APPT") {
-      let startDateTime = (((element.schd_delv_start).toISOString()).substring(0, 19)) + "-0500";
-      let endDateTime = (((element.schd_delv_end).toISOString()).substring(0, 19)) + "-0500";
-      bodyData["deliveryAppointmentWindow"] = {
-        "startDateTime": startDateTime,
-        "endDateTime": endDateTime
+      try {
+        let startDateTime = (((element.schd_delv_start).toISOString()).substring(0, 19)) + "-0500";
+        let endDateTime = (((element.schd_delv_end).toISOString()).substring(0, 19)) + "-0500";
+        bodyData["deliveryAppointmentWindow"] = {
+          "startDateTime": startDateTime,
+          "endDateTime": endDateTime
+        }
+      } catch {
+        bodyData["deliveryAppointmentWindow"] = {
+          "startDateTime": '',
+          "endDateTime": ''
+        }
       }
     }
+
     var options = {
       method: "POST",
       uri: process.env.PROJECT44_ENDPOINT,
@@ -349,14 +357,7 @@ function sendNotification(element) {
       resolveWithFullResponse: true,
     };
     rp(options)
-      .then(async (returnData) => {
-        console.info(
-          "file_nbr : " + element.file_nbr,
-          "order_status : " + element.order_status,
-          "event_date : " + element.time_stamp,
-          "Info : Notification sent successfully",
-          returnData.statusCode
-        );
+      .then((returnData) => {
         element["project44Response"] = JSON.stringify({
           httpStatusCode: returnData.statusCode,
           message: "success",
@@ -364,16 +365,7 @@ function sendNotification(element) {
         element["json_record_object"] = JSON.stringify(bodyData);
         resolve({ status: returnData.statusCode, Data: element });
       })
-      .catch(async (err) => {
-        // TODO - Remove comments later
-
-        // console.error(
-        //   "file_nbr : " + element.file_nbr,
-        //   "order_status : " + element.order_status,
-        //   "event_date : " + element.time_stamp,
-        //   "\nError ==> 173 : ",
-        //   err
-        // );
+      .catch((err) => {
         element["project44Response"] = JSON.stringify({
           error: err.error,
         });
@@ -395,7 +387,7 @@ async function execHandler() {
   try {
     await client.connect();
     response = await client.query(
-      `select * from project44 where message_sent = '' order by file_nbr, event_date`
+      `select * from project44 where message_sent = ''`
     );
     await client.end();
   } catch (error) {
@@ -417,6 +409,10 @@ async function execHandler() {
 
     var index_x = 0;
 
+    // Validate the model of all the records that are fetched.
+    // If it's a valid model, it will add the promise to execute the PROJECT_44 API
+    // Else it prints error 
+
     for (let x in queryResponse) {
       // console.log("event_date", queryResponse[x]["event_date"])
       queryResponse[x]["event_date"] = (((queryResponse[x]["event_date"]).toISOString()).substring(0, 19)) + "-0500";
@@ -432,13 +428,16 @@ async function execHandler() {
       } else {
         console.error("Error ==> 228 : ", JSON.stringify(validResult));
       }
-      index_x += 1;
     }
 
+    
     var result = await Promise.all(promises)
+
+    // Running a loop through all the results for all the requests in the promises array
+    // If it's a success, add the dynamoDb payload for update to allSuccessRecords array
+    // Else add to allFailedRecords array
     for (let index = 0; index < result.length; index++) {
         const element = result[index];
-
         element.Data["order_status"] = Object.keys(orderStatusCode).find(
           (key) => orderStatusCode[key] === element.Data.order_status
         );
@@ -465,7 +464,6 @@ async function execHandler() {
                 order_status: element.Data["order_status"],
                 json_msg: element.Data.json_record_object,
                 project_44_response: element.Data.project44Response,
-                // time_stamp: await currentDate()
                 time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
               },
             },
@@ -474,11 +472,16 @@ async function execHandler() {
         }
       }
 
+
+    // If the length of inputRecors > 0, then update all successful records in redshift and dynamodb
     if (inputRecord.length) {
       try {
         let redshiftRecords = await arrayGroup(inputRecord);
         let dynamodbRecord = await arrayGroup(allSuccessRecords);
+        index_x = 0;
         for (let x in dynamodbRecord) {
+          console.info(`INFO ==> 282, Loop counter for redshift update : ${index_x}`);
+
           let replacedData = JSON.stringify(redshiftRecords[x]);
           replacedData = replacedData.replace("[", "(");
           replacedData = replacedData.replace("]", ")");
@@ -487,6 +490,7 @@ async function execHandler() {
           console.info("Records updated in redshift: ", replacedData);
           await Dynamo.batchInsertRecord(dynamodbRecord[x]);
           console.info("Success records inserted in dynamoDB: ", dynamodbRecord[x]);
+          index_x+=1;
         }
       } catch (e) {
         console.error(
@@ -495,7 +499,12 @@ async function execHandler() {
         );
         return;
       }
-    } else if (allFailedRecords.length) {
+    } else {
+      console.error("Error ==> 270 : failure to insert record");
+    }
+
+    // If the length of allFailedRecords > 0, then update all unsuccessful records in dynamodb
+    if (allFailedRecords.length) {
       try {
         let recordInsert = await arrayGroup(allFailedRecords);
         console.info(
@@ -504,6 +513,7 @@ async function execHandler() {
         );
         index_x = 0;
         for (let x in recordInsert) {
+          console.info(`INFO ==> 282, Loop counter for failed records : ${index_x}`);
           await Dynamo.batchInsertRecord(recordInsert[x]);
           console.info("Failed records inserted in dynamodb: ", recordInsert[x]);
           index_x+=1;
