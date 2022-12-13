@@ -79,7 +79,7 @@ async function batchInsertRecord(records) {
         return await documentClient.batchWrite(params).promise();
     } catch (e) {
         console.error("insert Error: ", e);
-        return await handleError(1007, e, get(e, 'details[0].message', null));
+        return handleError(1007, e, get(e, 'details[0].message', null));
     }
 }
 

@@ -417,18 +417,10 @@ async function execHandler() {
 
     var index_x = 0;
 
-    // Info - Change 3 by Abhishek - Updates for loop
     for (let x in queryResponse) {
-    // for (let index = 0; index < result.length; index++) {
-      console.info(
-        "Info ==> 282 : Loop Counter: ",
-        index_x
-      );
       // console.log("event_date", queryResponse[x]["event_date"])
       queryResponse[x]["event_date"] = (((queryResponse[x]["event_date"]).toISOString()).substring(0, 19)) + "-0500";
       queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"];
-      // Info - Change 5 by Abhishek - Removed sleep
-      // await sleep(1000);
       let validResult = await validate(queryResponse[x]);
       if (!validResult.code) {
         validResult["order_status"] = orderStatusCode[validResult.order_status];
@@ -443,15 +435,8 @@ async function execHandler() {
       index_x += 1;
     }
 
-    // Info - Change 1 by Abhishek - removed then from promise
-    // Info - Change 2 by Abhishek - Added for loop instead of array.map and added log for loop counter
     var result = await Promise.all(promises)
     for (let index = 0; index < result.length; index++) {
-        console.info(
-          "Info ==> 282 : Loop Counter for Promise.all : ",
-          index
-        );
-
         const element = result[index];
 
         element.Data["order_status"] = Object.keys(orderStatusCode).find(
@@ -467,19 +452,12 @@ async function execHandler() {
                 order_status: element.Data["order_status"],
                 json_msg: element.Data.json_record_object,
                 project_44_response: element.Data.project44Response,
-                time_stamp: moment
-                  .tz("America/Chicago")
-                  .format("YYYY:MM:DD HH:mm:ss")
-                  .toString()
+                time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
               },
             },
           };
           allSuccessRecords.push(dynamodbPayload);
         } else if (element.status == "failure") {
-          console.error(
-            "Send Notification Error ==> 281 : ",
-            JSON.stringify(element.Data.project44Response)
-          );
           dynamodbPayload = {
             PutRequest: {
               Item: {
@@ -488,10 +466,7 @@ async function execHandler() {
                 json_msg: element.Data.json_record_object,
                 project_44_response: element.Data.project44Response,
                 // time_stamp: await currentDate()
-                time_stamp: moment
-                  .tz("America/Chicago")
-                  .format("YYYY:MM:DD HH:mm:ss")
-                  .toString()
+                time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
               },
             },
           };
@@ -528,15 +503,7 @@ async function execHandler() {
           recordInsert.length
         );
         index_x = 0;
-        // Info - Change 4 by Abhishek - log in loop
         for (let x in recordInsert) {
-          console.info(
-            "Insert Failed Record in dynamoDB==> 259 : ",
-            JSON.stringify(recordInsert)
-          );
-          console.info(
-            `Info ==> 282 : Loop Counter for batch insert in dynamoDB: ${index_x}`,
-          );
           await Dynamo.batchInsertRecord(recordInsert[x]);
           console.info("Failed records inserted in dynamodb: ", recordInsert[x]);
           index_x+=1;
@@ -565,7 +532,7 @@ async function redshiftBatchUpdate(records) {
   let response;
   try {
     await client.connect();
-    let execQuery = `update project44 set message_sent = 'F' where id in ${records}`;
+    let execQuery = `update project44 set message_sent = 'Y' where id in ${records}`;
     response = await client.query(execQuery);
     console.info(
       "Redshift Record Update Response : ",
