@@ -387,7 +387,7 @@ async function execHandler() {
   try {
     await client.connect();
     response = await client.query(
-      `select * from project44 where message_sent = '' order by event_date desc`
+      `select * from project44 where message_sent = '' order by load_create_date desc`
     );
     await client.end();
   } catch (error) {
