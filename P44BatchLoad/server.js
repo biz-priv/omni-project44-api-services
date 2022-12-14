@@ -387,7 +387,7 @@ async function execHandler() {
   try {
     await client.connect();
     response = await client.query(
-      `select * from project44 where message_sent = ''`
+      `select * from project44 where message_sent = '' order by event_date desc`
     );
     await client.end();
   } catch (error) {
@@ -430,47 +430,47 @@ async function execHandler() {
       }
     }
 
-    
+
     var result = await Promise.all(promises)
 
     // Running a loop through all the results for all the requests in the promises array
     // If it's a success, add the dynamoDb payload for update to allSuccessRecords array
     // Else add to allFailedRecords array
     for (let index = 0; index < result.length; index++) {
-        const element = result[index];
-        element.Data["order_status"] = Object.keys(orderStatusCode).find(
-          (key) => orderStatusCode[key] === element.Data.order_status
-        );
+      const element = result[index];
+      element.Data["order_status"] = Object.keys(orderStatusCode).find(
+        (key) => orderStatusCode[key] === element.Data.order_status
+      );
 
-        if (element.status == 202) {
-          inputRecord.push(element.Data.id);
-          dynamodbPayload = {
-            PutRequest: {
-              Item: {
-                file_nbr: element.Data.file_nbr,
-                order_status: element.Data["order_status"],
-                json_msg: element.Data.json_record_object,
-                project_44_response: element.Data.project44Response,
-                time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
-              },
+      if (element.status == 202) {
+        inputRecord.push(element.Data.id);
+        dynamodbPayload = {
+          PutRequest: {
+            Item: {
+              file_nbr: element.Data.file_nbr,
+              order_status: element.Data["order_status"],
+              json_msg: element.Data.json_record_object,
+              project_44_response: element.Data.project44Response,
+              time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
             },
-          };
-          allSuccessRecords.push(dynamodbPayload);
-        } else if (element.status == "failure") {
-          dynamodbPayload = {
-            PutRequest: {
-              Item: {
-                file_nbr: element.Data.file_nbr,
-                order_status: element.Data["order_status"],
-                json_msg: element.Data.json_record_object,
-                project_44_response: element.Data.project44Response,
-                time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
-              },
+          },
+        };
+        allSuccessRecords.push(dynamodbPayload);
+      } else if (element.status == "failure") {
+        dynamodbPayload = {
+          PutRequest: {
+            Item: {
+              file_nbr: element.Data.file_nbr,
+              order_status: element.Data["order_status"],
+              json_msg: element.Data.json_record_object,
+              project_44_response: element.Data.project44Response,
+              time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
             },
-          };
-          allFailedRecords.push(dynamodbPayload);
-        }
+          },
+        };
+        allFailedRecords.push(dynamodbPayload);
       }
+    }
 
 
     // If the length of inputRecors > 0, then update all successful records in redshift and dynamodb
@@ -490,7 +490,7 @@ async function execHandler() {
           console.info("Records updated in redshift: ", replacedData);
           await Dynamo.batchInsertRecord(dynamodbRecord[x]);
           console.info("Success records inserted in dynamoDB: ", dynamodbRecord[x]);
-          index_x+=1;
+          index_x += 1;
         }
       } catch (e) {
         console.error(
@@ -516,7 +516,7 @@ async function execHandler() {
           console.info(`INFO ==> 282, Loop counter for failed records : ${index_x}`);
           await Dynamo.batchInsertRecord(recordInsert[x]);
           console.info("Failed records inserted in dynamodb: ", recordInsert[x]);
-          index_x+=1;
+          index_x += 1;
         }
       } catch (e) {
         console.error("Dynamo Batch Insert Error ==> 261 : ", e);
