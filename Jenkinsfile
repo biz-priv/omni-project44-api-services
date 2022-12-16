@@ -21,10 +21,8 @@ pipeline {
         stage('ECR deploy'){
              steps {
                 script{
-                        docker.withRegistry('https://332281781429.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:omni-aws-creds') {
-                        def project44_image = docker.build('omni-dw-project44-batch-${env.ENVIRONMENT}')
-                    project44_image.push("${env.BUILD_NUMBER}")
-                    project44_image.push("latest")
+                    docker.withTool('docker'){
+                        docker login -u AWS https://332281781429.dkr.ecr.us-east-1.amazonaws.com -p $(aws ecr get-login-password --region us-east-1)
                     }
                 }
              }
