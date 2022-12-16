@@ -39,7 +39,6 @@ pipeline {
                         dir("./P44BatchLoad"){
                             withAWS(credentials: 'omni-aws-creds'){
                                 sh '''
-                                systemctl start docker
                                 docker login -u AWS https://332281781429.dkr.ecr.us-east-1.amazonaws.com -p $(aws ecr get-login-password --region us-east-1)
                                 '''
                                 sh """
