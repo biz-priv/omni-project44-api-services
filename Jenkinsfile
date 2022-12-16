@@ -22,7 +22,9 @@ pipeline {
              steps {
                 script{
                     docker.withTool('docker'){
+                        sh ''' 
                         docker login -u AWS https://332281781429.dkr.ecr.us-east-1.amazonaws.com -p $(aws ecr get-login-password --region us-east-1)
+                        '''
                     }
                 }
              }
