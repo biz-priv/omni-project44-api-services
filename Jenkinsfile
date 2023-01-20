@@ -18,29 +18,29 @@ pipeline {
             }
         }
 
-        stage('Omni Deploy'){
-            when {
-                anyOf {
-                    branch 'develop';
-                    branch 'master';
-                }
-                expression {
-                    return true;
-                }
-            }
-            steps {
-                withAWS(credentials: 'omni-aws-creds'){
-                    sh """
-                    npm i serverless
-                    npm i
-                    cd lib/nodejs
-                    npm i
-                    cd ../..
-                    serverless --version
-                    sls deploy -s ${env.ENVIRONMENT}
-                    """
-                }
-            }
-        }
+        // stage('Omni Deploy'){
+        //     when {
+        //         anyOf {
+        //             branch 'develop';
+        //             branch 'master';
+        //         }
+        //         expression {
+        //             return true;
+        //         }
+        //     }
+        //     steps {
+        //         withAWS(credentials: 'omni-aws-creds'){
+        //             sh """
+        //             npm i serverless
+        //             npm i
+        //             cd lib/nodejs
+        //             npm i
+        //             cd ../..
+        //             serverless --version
+        //             sls deploy -s ${env.ENVIRONMENT}
+        //             """
+        //         }
+        //     }
+        // }
     }
 }
