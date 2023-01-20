@@ -18,22 +18,11 @@ pipeline {
             }
         }
 
-        stage('ECR deploy'){
-             steps {
-                script { 
-                    def docker_home = tool name: 'docker', type: 'dockerTool'
-                    def docker_path = "${docker_home}/bin/docker"
-                    sh ''' 
-                    docker login -u AWS https://332281781429.dkr.ecr.us-east-1.amazonaws.com -p $(aws ecr get-login-password --region us-east-1)
-                    '''
-                }
-            }
-        }
-
         stage('Omni Deploy'){
             when {
                 anyOf {
-                    branch 'feature/*';
+                    branch 'develop';
+                    branch 'master';
                 }
                 expression {
                     return true;
