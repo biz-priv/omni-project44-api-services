@@ -1,6 +1,6 @@
 const Joi = require('joi');
 const get = require('lodash.get');
-const { handleError } = require('../../shared/utils/responses');
+const { handleError } = require('./shared/utils/responses');
 
 
 const schema = Joi.object({
