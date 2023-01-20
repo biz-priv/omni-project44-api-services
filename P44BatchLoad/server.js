@@ -19,7 +19,8 @@ function checkAccount(param) {
     22209: "MCKESSON",
     21719: "MCKESSON",
     22210: "MCKESSON",
-    9575: "TECHNICOLOR"
+    9575: "TECHNICOLOR",
+    2074: "JCPenny"
   };
   return data[param];
 }
