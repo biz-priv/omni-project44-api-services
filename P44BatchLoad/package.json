@@ -12,14 +12,15 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.1163.0",
-    "zlib": "^1.0.5",
     "cors": "^2.8.5",
     "joi": "^17.4.0",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "moment": "^2.29.1",
+    "moment-timezone": "^0.5.40",
     "pg": "^8.6.0",
     "request": "^2.88.2",
-    "request-promise": "^4.2.6"
+    "request-promise": "^4.2.6",
+    "zlib": "^1.0.5"
   }
 }

@@ -1,7 +1,7 @@
 const { Client } = require("pg");
 const Dynamo = require("./shared/dynamo/db");
 const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;
-const moment = require("moment");
+const moment = require("moment-timezone");
 const validate = require("./validate");
 const rp = require("request-promise");
 const orderStatusCode = require("./orderStatusCode.json");
@@ -18,7 +18,9 @@ function checkAccount(param) {
     11912: "OVERSTOCK",
     22209: "MCKESSON",
     21719: "MCKESSON",
-    22210: "MCKESSON"
+    22210: "MCKESSON",
+    9575: "TECHNICOLOR",
+    2074: "JCPenny"
   };
   return data[param];
 }
@@ -27,7 +29,7 @@ function sendNotification(element) {
   return new Promise(async (resolve, reject) => {
     let bodyData;
     const accountIdentifier = checkAccount(element.bill_to_nbr);
-    if (element.region_code_basis == "S") {
+    if (element.region_code_basis == "S" && accountIdentifier != "MCKESSON") {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -77,7 +79,7 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
-    } else if (element.region_code_basis == "C") {
+    } else if (element.region_code_basis == "C" && accountIdentifier != "MCKESSON") {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -127,15 +129,223 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
+    } else if (element.region_code_basis == "S" && accountIdentifier == "MCKESSON") {
+      bodyData = {
+        customerAccount: {
+          accountIdentifier,
+        },
+        carrierIdentifier: {
+          type: "SCAC",
+          value: "OMNG",
+        },
+        shipmentIdentifiers: [
+          {
+            type: "BILL_OF_LADING",
+            value: element.ref_nbr,
+            primaryForType: true,
+            source: "CUSTOMER",
+          },
+          {
+            type: "PRO",
+            value: element.house_bill_nbr,
+            primaryForType: true,
+            source: "CAPACITY_PROVIDER",
+          },
+        ],
+        statusCode: element.order_status,
+        terminalCode: element.origin_port_iata,
+        stopType: "ORIGIN",
+        stopNumber: 0,
+        location: {
+          address: {
+            postalCode: element.shipper_zip,
+            addressLines: [element.shipper_addr_1],
+            city: element.shipper_city,
+            state: element.shipper_st,
+            country: element.shipper_cntry,
+          },
+          contact: {
+            companyName: null,
+            contactName: null,
+            phoneNumber: null,
+            phoneNumberCountryCode: null,
+            phoneNumber2: null,
+            phoneNumber2CountryCode: null,
+            email: null,
+            faxNumber: null,
+            faxNumberCountryCode: null,
+          },
+        },
+        timestamp: element.time_stamp,
+        sourceType: "API",
+      };
+    } else if (element.region_code_basis == "C" && accountIdentifier == "MCKESSON") {
+      bodyData = {
+        customerAccount: {
+          accountIdentifier,
+        },
+        carrierIdentifier: {
+          type: "SCAC",
+          value: "OMNG",
+        },
+        shipmentIdentifiers: [
+          {
+            type: "BILL_OF_LADING",
+            value: element.ref_nbr,
+            primaryForType: true,
+            source: "CUSTOMER",
+          },
+          {
+            type: "PRO",
+            value: element.house_bill_nbr,
+            primaryForType: true,
+            source: "CAPACITY_PROVIDER",
+          },
+        ],
+        statusCode: element.order_status,
+        terminalCode: element.destination_port_iata,
+        stopType: "DESTINATION",
+        stopNumber: 1,
+        location: {
+          address: {
+            postalCode: element.consignee_zip,
+            addressLines: [element.consignee_addr_1],
+            city: element.consignee_city,
+            state: element.consignee_st,
+            country: element.consignee_cntry,
+          },
+          contact: {
+            companyName: null,
+            contactName: element.consignee_name,
+            phoneNumber: null,
+            phoneNumberCountryCode: null,
+            phoneNumber2: null,
+            phoneNumber2CountryCode: null,
+            email: null,
+            faxNumber: null,
+            faxNumberCountryCode: null,
+          },
+        },
+        timestamp: element.time_stamp,
+        sourceType: "API",
+      };
+    } else if (element.region_code_basis != "C" || element.region_code_basis != "S" && accountIdentifier == "MCKESSON") {
+      bodyData = {
+        customerAccount: {
+          accountIdentifier,
+        },
+        carrierIdentifier: {
+          type: "SCAC",
+          value: "OMNG",
+        },
+        shipmentIdentifiers: [
+          {
+            type: "BILL_OF_LADING",
+            value: element.ref_nbr,
+            primaryForType: true,
+            source: "CUSTOMER",
+          },
+          {
+            type: "PRO",
+            value: element.house_bill_nbr,
+            primaryForType: true,
+            source: "CAPACITY_PROVIDER",
+          },
+        ],
+        statusCode: element.order_status,
+        terminalCode: element.origin_port_iata,
+        stopType: "ORIGIN",
+        stopNumber: 0,
+        location: {
+          address: {
+            postalCode: element.shipper_zip,
+            addressLines: [element.shipper_addr_1],
+            city: element.shipper_city,
+            state: element.shipper_st,
+            country: element.shipper_cntry,
+          },
+          contact: {
+            companyName: null,
+            contactName: null,
+            phoneNumber: null,
+            phoneNumberCountryCode: null,
+            phoneNumber2: null,
+            phoneNumber2CountryCode: null,
+            email: null,
+            faxNumber: null,
+            faxNumberCountryCode: null,
+          },
+        },
+        timestamp: element.time_stamp,
+        sourceType: "API",
+      };
+    } else if (element.region_code_basis != "C" || element.region_code_basis != "S" && accountIdentifier != "MCKESSON") {
+      bodyData = {
+        customerAccount: {
+          accountIdentifier,
+        },
+        carrierIdentifier: {
+          type: "SCAC",
+          value: "OMNG",
+        },
+        shipmentIdentifiers: [
+          {
+            type: "PURCHASE_ORDER",
+            value: element.ref_nbr,
+            primaryForType: true,
+            source: "CUSTOMER",
+          },
+          {
+            type: "PRO",
+            value: element.house_bill_nbr,
+            primaryForType: true,
+            source: "CAPACITY_PROVIDER",
+          },
+        ],
+        statusCode: element.order_status,
+        terminalCode: element.origin_port_iata,
+        stopType: "ORIGIN",
+        stopNumber: 0,
+        location: {
+          address: {
+            postalCode: element.shipper_zip,
+            addressLines: [element.shipper_addr_1],
+            city: element.shipper_city,
+            state: element.shipper_st,
+            country: element.shipper_cntry,
+          },
+          contact: {
+            companyName: null,
+            contactName: null,
+            phoneNumber: null,
+            phoneNumberCountryCode: null,
+            phoneNumber2: null,
+            phoneNumber2CountryCode: null,
+            email: null,
+            faxNumber: null,
+            faxNumberCountryCode: null,
+          },
+        },
+        timestamp: element.time_stamp,
+        sourceType: "API",
+      };
     }
     if (element.order_status == "UPDATED_DELIVERY_APPT") {
-      let startDateTime = (((element.schd_delv_start).toISOString()).substring(0, 19)) + "-0500";
-      let endDateTime = (((element.schd_delv_end).toISOString()).substring(0, 19)) + "-0500";
-      bodyData["deliveryAppointmentWindow"] = {
-        "startDateTime": startDateTime,
-        "endDateTime": endDateTime
+      try {
+        let startDateTime = (((element.schd_delv_start).toISOString()).substring(0, 19)) + "-0500";
+        let endDateTime = (((element.schd_delv_end).toISOString()).substring(0, 19)) + "-0500";
+        bodyData["deliveryAppointmentWindow"] = {
+          "startDateTime": startDateTime,
+          "endDateTime": endDateTime
+        }
+      } catch {
+        bodyData["deliveryAppointmentWindow"] = {
+          "startDateTime": '',
+          "endDateTime": ''
+        }
       }
     }
+
     var options = {
       method: "POST",
       uri: process.env.PROJECT44_ENDPOINT,
@@ -148,14 +358,7 @@ function sendNotification(element) {
       resolveWithFullResponse: true,
     };
     rp(options)
-      .then(async (returnData) => {
-        console.info(
-          "file_nbr : " + element.file_nbr,
-          "order_status : " + element.order_status,
-          "event_date : " + element.time_stamp,
-          "Info : Notification sent successfully",
-          returnData.statusCode
-        );
+      .then((returnData) => {
         element["project44Response"] = JSON.stringify({
           httpStatusCode: returnData.statusCode,
           message: "success",
@@ -163,14 +366,7 @@ function sendNotification(element) {
         element["json_record_object"] = JSON.stringify(bodyData);
         resolve({ status: returnData.statusCode, Data: element });
       })
-      .catch(async (err) => {
-        console.error(
-          "file_nbr : " + element.file_nbr,
-          "order_status : " + element.order_status,
-          "event_date : " + element.time_stamp,
-          "\nError ==> 173 : ",
-          err
-        );
+      .catch((err) => {
         element["project44Response"] = JSON.stringify({
           error: err.error,
         });
@@ -192,7 +388,7 @@ async function execHandler() {
   try {
     await client.connect();
     response = await client.query(
-      `select * from project44 where message_sent = '' order by file_nbr, event_date`
+      `select * from project44 where message_sent = '' order by load_create_date desc`
     );
     await client.end();
   } catch (error) {
@@ -211,11 +407,17 @@ async function execHandler() {
     let allFailedRecords = [];
     let dynamodbPayload;
     let promises = [];
+
+    var index_x = 0;
+
+    // Validate the model of all the records that are fetched.
+    // If it's a valid model, it will add the promise to execute the PROJECT_44 API
+    // Else it prints error 
+
     for (let x in queryResponse) {
       // console.log("event_date", queryResponse[x]["event_date"])
       queryResponse[x]["event_date"] = (((queryResponse[x]["event_date"]).toISOString()).substring(0, 19)) + "-0500";
       queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"];
-      await sleep(1000);
       let validResult = await validate(queryResponse[x]);
       if (!validResult.code) {
         validResult["order_status"] = orderStatusCode[validResult.order_status];
@@ -228,47 +430,59 @@ async function execHandler() {
         console.error("Error ==> 228 : ", JSON.stringify(validResult));
       }
     }
-    await Promise.all(promises).then((result) => {
-      result.map(async (element) => {
-        element.Data["order_status"] = Object.keys(orderStatusCode).find(
-          (key) => orderStatusCode[key] === element.Data.order_status
-        );
 
-        if (element.status == 202) {
-          inputRecord.push(element.Data.id);
-          dynamodbPayload = {
-            PutRequest: {
-              Item: {
-                file_nbr: element.Data.file_nbr,
-                order_status: element.Data["order_status"],
-                json_msg: element.Data.json_record_object,
-                project_44_response: element.Data.project44Response,
-                time_stamp: await currentDate()
-              },
+
+    var result = await Promise.all(promises)
+
+    // Running a loop through all the results for all the requests in the promises array
+    // If it's a success, add the dynamoDb payload for update to allSuccessRecords array
+    // Else add to allFailedRecords array
+    for (let index = 0; index < result.length; index++) {
+      const element = result[index];
+      element.Data["order_status"] = Object.keys(orderStatusCode).find(
+        (key) => orderStatusCode[key] === element.Data.order_status
+      );
+
+      if (element.status == 202) {
+        inputRecord.push(element.Data.id);
+        dynamodbPayload = {
+          PutRequest: {
+            Item: {
+              file_nbr: element.Data.file_nbr,
+              order_status: element.Data["order_status"],
+              json_msg: element.Data.json_record_object,
+              project_44_response: element.Data.project44Response,
+              time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
             },
-          };
-          allSuccessRecords.push(dynamodbPayload);
-        } else if (element.status == "failure") {
-          dynamodbPayload = {
-            PutRequest: {
-              Item: {
-                file_nbr: element.Data.file_nbr,
-                order_status: element.Data["order_status"],
-                json_msg: element.Data.json_record_object,
-                project_44_response: element.Data.project44Response,
-                time_stamp: await currentDate()
-              },
+          },
+        };
+        allSuccessRecords.push(dynamodbPayload);
+      } else if (element.status == "failure") {
+        dynamodbPayload = {
+          PutRequest: {
+            Item: {
+              file_nbr: element.Data.file_nbr,
+              order_status: element.Data["order_status"],
+              json_msg: element.Data.json_record_object,
+              project_44_response: element.Data.project44Response,
+              time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
             },
-          };
-          allFailedRecords.push(dynamodbPayload);
-        }
-      });
-    });
+          },
+        };
+        allFailedRecords.push(dynamodbPayload);
+      }
+    }
+
+
+    // If the length of inputRecors > 0, then update all successful records in redshift and dynamodb
     if (inputRecord.length) {
       try {
         let redshiftRecords = await arrayGroup(inputRecord);
         let dynamodbRecord = await arrayGroup(allSuccessRecords);
+        index_x = 0;
         for (let x in dynamodbRecord) {
+          console.info(`INFO ==> 282, Loop counter for redshift update : ${index_x}`);
+
           let replacedData = JSON.stringify(redshiftRecords[x]);
           replacedData = replacedData.replace("[", "(");
           replacedData = replacedData.replace("]", ")");
@@ -277,6 +491,7 @@ async function execHandler() {
           console.info("Records updated in redshift: ", replacedData);
           await Dynamo.batchInsertRecord(dynamodbRecord[x]);
           console.info("Success records inserted in dynamoDB: ", dynamodbRecord[x]);
+          index_x += 1;
         }
       } catch (e) {
         console.error(
@@ -285,16 +500,24 @@ async function execHandler() {
         );
         return;
       }
-    } else if (allFailedRecords.length) {
+    } else {
+      console.error("Error ==> 270 : failure to insert record");
+    }
+
+    // If the length of allFailedRecords > 0, then update all unsuccessful records in dynamodb
+    if (allFailedRecords.length) {
       try {
         let recordInsert = await arrayGroup(allFailedRecords);
+        console.info(
+          "Info ==> 283 : Number of array groups: ",
+          recordInsert.length
+        );
+        index_x = 0;
         for (let x in recordInsert) {
-          console.info(
-            "Insert Failed Record in dynamoDB==> 259 : ",
-            JSON.stringify(recordInsert)
-          );
+          console.info(`INFO ==> 282, Loop counter for failed records : ${index_x}`);
           await Dynamo.batchInsertRecord(recordInsert[x]);
           console.info("Failed records inserted in dynamodb: ", recordInsert[x]);
+          index_x += 1;
         }
       } catch (e) {
         console.error("Dynamo Batch Insert Error ==> 261 : ", e);
@@ -345,12 +568,4 @@ async function arrayGroup(arrayRecord) {
       return e;
     });
   return groups;
-}
-
-async function currentDate() {
-  const date = new Date();
-  const CSToffSet = -300; //CST is -5:00 of UTC; i.e. 60*5 = -300 in minutes 
-  offset = CSToffSet * 60 * 1000;
-  const CSTTime = String(new Date(date.getTime() + offset));
-  return CSTTime;
 }
