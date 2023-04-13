@@ -20,7 +20,7 @@ function checkAccount(param) {
     21719: "MCKESSON",
     22210: "MCKESSON",
     9575: "TECHNICOLOR",
-    2074: "JCPenny"
+    2074: "JCPenny",
   };
   return data[param];
 }
@@ -79,7 +79,10 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
-    } else if (element.region_code_basis == "C" && accountIdentifier != "MCKESSON") {
+    } else if (
+      element.region_code_basis == "C" &&
+      accountIdentifier != "MCKESSON"
+    ) {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -129,7 +132,10 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
-    } else if (element.region_code_basis == "S" && accountIdentifier == "MCKESSON") {
+    } else if (
+      element.region_code_basis == "S" &&
+      accountIdentifier == "MCKESSON"
+    ) {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -179,7 +185,10 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
-    } else if (element.region_code_basis == "C" && accountIdentifier == "MCKESSON") {
+    } else if (
+      element.region_code_basis == "C" &&
+      accountIdentifier == "MCKESSON"
+    ) {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -229,7 +238,10 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
-    } else if (element.region_code_basis != "C" || element.region_code_basis != "S" && accountIdentifier == "MCKESSON") {
+    } else if (
+      element.region_code_basis != "C" ||
+      (element.region_code_basis != "S" && accountIdentifier == "MCKESSON")
+    ) {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -279,7 +291,10 @@ function sendNotification(element) {
         timestamp: element.time_stamp,
         sourceType: "API",
       };
-    } else if (element.region_code_basis != "C" || element.region_code_basis != "S" && accountIdentifier != "MCKESSON") {
+    } else if (
+      element.region_code_basis != "C" ||
+      (element.region_code_basis != "S" && accountIdentifier != "MCKESSON")
+    ) {
       bodyData = {
         customerAccount: {
           accountIdentifier,
@@ -332,17 +347,19 @@ function sendNotification(element) {
     }
     if (element.order_status == "UPDATED_DELIVERY_APPT") {
       try {
-        let startDateTime = (((element.schd_delv_start).toISOString()).substring(0, 19)) + "-0500";
-        let endDateTime = (((element.schd_delv_end).toISOString()).substring(0, 19)) + "-0500";
+        let startDateTime =
+          element.schd_delv_start.toISOString().substring(0, 19) + "-0500";
+        let endDateTime =
+          element.schd_delv_end.toISOString().substring(0, 19) + "-0500";
         bodyData["deliveryAppointmentWindow"] = {
-          "startDateTime": startDateTime,
-          "endDateTime": endDateTime
-        }
+          startDateTime: startDateTime,
+          endDateTime: endDateTime,
+        };
       } catch {
         bodyData["deliveryAppointmentWindow"] = {
-          "startDateTime": '',
-          "endDateTime": ''
-        }
+          startDateTime: "",
+          endDateTime: "",
+        };
       }
     }
 
@@ -406,23 +423,29 @@ async function execHandler() {
     let allSuccessRecords = [];
     let allFailedRecords = [];
     let dynamodbPayload;
-    let promises = [];
+    let result = [];
 
     var index_x = 0;
 
     // Validate the model of all the records that are fetched.
     // If it's a valid model, it will add the promise to execute the PROJECT_44 API
-    // Else it prints error 
+    // Else it prints error
 
     for (let x in queryResponse) {
       // console.log("event_date", queryResponse[x]["event_date"])
-      queryResponse[x]["event_date"] = (((queryResponse[x]["event_date"]).toISOString()).substring(0, 19)) + "-0500";
+      queryResponse[x]["event_date"] =
+        queryResponse[x]["event_date"].toISOString().substring(0, 19) + "-0500";
       queryResponse[x]["time_stamp"] = queryResponse[x]["event_date"];
       let validResult = await validate(queryResponse[x]);
       if (!validResult.code) {
         validResult["order_status"] = orderStatusCode[validResult.order_status];
         if (validResult["order_status"] != undefined) {
-          promises.push(sendNotification(validResult));
+          /**
+           * added 5 sec delay
+           */
+          await setDelay(5);
+          const res = await sendNotification(validResult);
+          result = [...result, res];
         } else {
           console.error("Error ==> 225 : ", JSON.stringify(validResult));
         }
@@ -431,8 +454,7 @@ async function execHandler() {
       }
     }
 
-
-    var result = await Promise.all(promises)
+    // var result = await Promise.all(promises)
 
     // Running a loop through all the results for all the requests in the promises array
     // If it's a success, add the dynamoDb payload for update to allSuccessRecords array
@@ -452,7 +474,10 @@ async function execHandler() {
               order_status: element.Data["order_status"],
               json_msg: element.Data.json_record_object,
               project_44_response: element.Data.project44Response,
-              time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
+              time_stamp: moment
+                .tz("America/Chicago")
+                .format("YYYY:MM:DD HH:mm:ss")
+                .toString(),
             },
           },
         };
@@ -465,14 +490,16 @@ async function execHandler() {
               order_status: element.Data["order_status"],
               json_msg: element.Data.json_record_object,
               project_44_response: element.Data.project44Response,
-              time_stamp: moment.tz("America/Chicago").format("YYYY:MM:DD HH:mm:ss").toString()
+              time_stamp: moment
+                .tz("America/Chicago")
+                .format("YYYY:MM:DD HH:mm:ss")
+                .toString(),
             },
           },
         };
         allFailedRecords.push(dynamodbPayload);
       }
     }
-
 
     // If the length of inputRecors > 0, then update all successful records in redshift and dynamodb
     if (inputRecord.length) {
@@ -481,7 +508,9 @@ async function execHandler() {
         let dynamodbRecord = await arrayGroup(allSuccessRecords);
         index_x = 0;
         for (let x in dynamodbRecord) {
-          console.info(`INFO ==> 282, Loop counter for redshift update : ${index_x}`);
+          console.info(
+            `INFO ==> 282, Loop counter for redshift update : ${index_x}`
+          );
 
           let replacedData = JSON.stringify(redshiftRecords[x]);
           replacedData = replacedData.replace("[", "(");
@@ -490,7 +519,10 @@ async function execHandler() {
           await redshiftBatchUpdate(replacedData);
           console.info("Records updated in redshift: ", replacedData);
           await Dynamo.batchInsertRecord(dynamodbRecord[x]);
-          console.info("Success records inserted in dynamoDB: ", dynamodbRecord[x]);
+          console.info(
+            "Success records inserted in dynamoDB: ",
+            dynamodbRecord[x]
+          );
           index_x += 1;
         }
       } catch (e) {
@@ -514,9 +546,14 @@ async function execHandler() {
         );
         index_x = 0;
         for (let x in recordInsert) {
-          console.info(`INFO ==> 282, Loop counter for failed records : ${index_x}`);
+          console.info(
+            `INFO ==> 282, Loop counter for failed records : ${index_x}`
+          );
           await Dynamo.batchInsertRecord(recordInsert[x]);
-          console.info("Failed records inserted in dynamodb: ", recordInsert[x]);
+          console.info(
+            "Failed records inserted in dynamodb: ",
+            recordInsert[x]
+          );
           index_x += 1;
         }
       } catch (e) {
@@ -531,7 +568,16 @@ async function execHandler() {
     console.error("Error ==> 280 : ", JSON.stringify(response));
     return;
   }
-};
+}
+function setDelay(sec) {
+  console.log("delay started");
+  return new Promise(async (resolve, reject) => {
+    setTimeout(() => {
+      console.log("delay end");
+      resolve(true);
+    }, sec * 1000);
+  });
+}
 async function redshiftBatchUpdate(records) {
   const client = new Client({
     database: process.env.DB_DATABASE,
