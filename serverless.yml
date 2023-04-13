@@ -24,12 +24,13 @@ package:
   individually: true
   exclude:
     - Jenkinsfile
-    - 'node_modules/**'
-    - 'config/**'
+    - "node_modules/**"
+    - "config/**"
 
 functions:
   # - ${file(config/functions/GetRedshiftRecord.yml)}
-  - ${file(config/functions/BatchTrigger.yml)}
+  # - ${file(config/functions/BatchTrigger.yml)}
+  BatchTrigger: ${file(config/functions/BatchTrigger.yml):function}
 
 plugins:
   - serverless-offline
