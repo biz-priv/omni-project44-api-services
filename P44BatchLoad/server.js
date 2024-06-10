@@ -1,3 +1,10 @@
+/*
+* File: P44BatchLoad\server.js
+* Project: Omni-project44-api-services
+* Author: Bizcloud Experts
+* Date: 2023-04-13
+* Confidential and Proprietary
+*/
 const { Client } = require("pg");
 const Dynamo = require("./shared/dynamo/db");
 const PROJECT44_PAYLOAD_TABLE = process.env.PROJECT44_PAYLOAD_TABLE;

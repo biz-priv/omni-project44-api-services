@@ -1,3 +1,10 @@
+/*
+* File: P44BatchLoad\validate.js
+* Project: Omni-project44-api-services
+* Author: Bizcloud Experts
+* Date: 2022-09-30
+* Confidential and Proprietary
+*/
 const Joi = require('joi');
 const get = require('lodash.get');
 const { handleError } = require('./shared/utils/responses');

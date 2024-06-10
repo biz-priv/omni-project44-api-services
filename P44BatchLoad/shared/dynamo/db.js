@@ -1,3 +1,10 @@
+/*
+* File: P44BatchLoad\shared\dynamo\db.js
+* Project: Omni-project44-api-services
+* Author: Bizcloud Experts
+* Date: 2022-12-14
+* Confidential and Proprietary
+*/
 const AWS = require('aws-sdk');
 const get = require('lodash.get');
 const PROJECT44_TABLE = process.env.PROJECT44_TABLE;
