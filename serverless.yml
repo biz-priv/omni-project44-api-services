@@ -7,6 +7,10 @@ provider:
   stage: ${opt:stage, 'dev'}
   deploymentBucket: ${ssm:/omni-dw/${self:provider.stage}/sls/deployment/bucket}
   role: ${ssm:/omni-dw/${self:provider.stage}/lambda/role}
+  stackTags:
+    Application: Omni project44 api services
+    CreateBy: BizCloudExperts
+    Environment: ${self:provider.stage}  
   vpc:
     securityGroupIds:
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/sgId}

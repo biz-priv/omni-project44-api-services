@@ -4,6 +4,8 @@
     handler: src/Batch/TriggerBatchJob.BatchJobHandler
     memorySize: 256
     timeout: 60
+    tags:
+      Name: batch-trigger
     layers:
       - { Ref: CommonP44LibsLambdaLayer }
     package:
