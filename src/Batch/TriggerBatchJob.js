@@ -1,4 +1,11 @@
 'use strict';
+/*
+* File: src\Batch\TriggerBatchJob.js
+* Project: Omni-project44-api-services
+* Author: Bizcloud Experts
+* Date: 2022-10-01
+* Confidential and Proprietary
+*/
 const AWS = require('aws-sdk');
 const batch = new AWS.Batch({ apiVersion: '2016-08-10' });
 

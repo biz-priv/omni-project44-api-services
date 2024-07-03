@@ -1,3 +1,10 @@
+/*
+* File: P44BatchLoad\shared\utils\responses.js
+* Project: Omni-project44-api-services
+* Author: Bizcloud Experts
+* Date: 2022-09-30
+* Confidential and Proprietary
+*/
 const errors = [
     //createOrder - parking
     { code: 1001, httpStatus: 400, message: 'Schema validation error.' },
