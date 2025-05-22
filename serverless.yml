@@ -7,6 +7,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   deploymentBucket: ${ssm:/omni-dw/${self:provider.stage}/sls/deployment/bucket}
   role: ${ssm:/omni-dw/${self:provider.stage}/lambda/role}
+  logRetentionInDays: ${ssm:/omni-common-utils-infra/${self:provider.stage}/cloudwatch-logs/retention-period-1}
   vpc:
     securityGroupIds:
       - ${ssm:/omni-dw/${self:provider.stage}/lambda/sgId}
